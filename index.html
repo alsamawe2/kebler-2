@@ -287,58 +287,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
   text-decoration:underline;background:none;border:none;color:var(--muted);font-family:'Cairo',sans-serif;}
 .auth-skip:hover{color:var(--txt);}
 
-/* ─── SILVER LENS CATALOG ─── */
-const SLV_COLORS=[
-  {ar:"عسلي",c1:"#c8914a",c2:"#7a4a1a",ring:"#5a3210"},
-  {ar:"عسلي فاتح",c1:"#dcb877",c2:"#a87830",ring:"#7a5420"},
-  {ar:"خضر",c1:"#a3c79a",c2:"#3f7a3a",ring:"#2a5526"},
-  {ar:"أخضر زيتوني",c1:"#8a9a5a",c2:"#4a5a20",ring:"#303d14"},
-  {ar:"رمادي",c1:"#9a9da3",c2:"#4a4d54",ring:"#30333a"},
-  {ar:"رمادي داكن",c1:"#6a6d73",c2:"#2a2d33",ring:"#1a1c20"},
-  {ar:"أزرق",c1:"#6fa8d4",c2:"#1f5a8a",ring:"#143d61"},
-  {ar:"أزرق سماوي",c1:"#9cc7e8",c2:"#3f7bb0",ring:"#2a5580"},
-  {ar:"بني",c1:"#a8835a",c2:"#5e3c1f",ring:"#3f2813"},
-  {ar:"بني داكن",c1:"#6e5236",c2:"#3a2715",ring:"#26190d"},
-  {ar:"بنفسجي",c1:"#b89ed0",c2:"#6a4a93",ring:"#48316b"},
-  {ar:"وردي",c1:"#e0a8bc",c2:"#b05a78",ring:"#823c54"},
-  {ar:"فيروزي",c1:"#82cdcd",c2:"#1f8a8a",ring:"#136161"},
-  {ar:"أكوا",c1:"#8fd4d0",c2:"#2f9a92",ring:"#1d6e68"},
-  {ar:"كهرماني",c1:"#d4a04f",c2:"#9a6418",ring:"#6e470f"},
-  {ar:"رمادي أزرق",c1:"#8fa3c4",c2:"#3a4a6b",ring:"#26314a"},
-];
-var _slvPick=null;
-function openSLV(){
-  _slvPick=null;
-  var g=document.getElementById("slvGrid"); if(!g) return;
-  var h="";
-  SLV_COLORS.forEach(function(c,i){
-    var grad="radial-gradient(circle at 50% 50%,#111 0%,#111 16%,"+c.c1+" 22%,"+c.c2+" 64%,"+c.ring+" 100%)";
-    h+="<div class='slv-item' onclick='pickSLV("+i+",this)'><div class='slv-lens' style='background:"+grad+"'></div><div class='slv-ar'>"+c.ar+"</div></div>";
-  });
-  g.innerHTML=h;
-  var btn=document.getElementById("slvBtn"); if(btn){btn.disabled=true;btn.textContent="اختر لوناً أولاً";}
-  document.getElementById("slvModal").classList.add("on"); document.body.style.overflow="hidden";
-}
-function pickSLV(i,el){
-  _slvPick=i;
-  document.querySelectorAll(".slv-item").forEach(function(x){x.classList.remove("sel");});
-  if(el) el.classList.add("sel");
-  var btn=document.getElementById("slvBtn"); if(btn){btn.disabled=false;btn.textContent="🛒 أضف "+SLV_COLORS[i].ar+" للسلة";}
-}
-function closeSLV(){ document.getElementById("slvModal").classList.remove("on"); document.body.style.overflow=""; }
-function confirmSLV(){
-  if(_slvPick===null) return;
-  var col=SLV_COLORS[_slvPick];
-  var p=PRODUCTS.find(function(x){return x.id===18;}); if(!p) return;
-  var qty=qtyMap[18]||1, key="18-"+_slvPick;
-  var ex=cart.find(function(c){return c.key===key;});
-  if(ex) ex.qty+=qty;
-  else cart.push({id:p.id,name:p.name,key:key,qty:qty,price:p.price,varLabel:col.ar,mainImg:p.imgs[0]||""});
-  closeSLV(); updateCartUI();
-  var cn=document.getElementById("cn"); if(cn){cn.classList.remove("bump");void cn.offsetWidth;cn.classList.add("bump");}
-  toast("✓ أُضيفت عدسات "+col.ar+" للسلة"); openCart();
-}
-
 /* ─── HD COLOR CATALOG ─── */
 .hdc-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);
   backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
@@ -409,23 +357,6 @@ function confirmSLV(){
   cursor:pointer;transition:all .2s;}
 .slv-confirm:disabled{opacity:.5;cursor:not-allowed;}
 
-
-/* ─── PROMO CODE ─── */
-.promo-row{display:flex;gap:6px;margin-top:1rem;}
-.promo-input{flex:1;padding:.6rem .9rem;background:var(--card);
-  border:1px solid var(--border);border-radius:10px;color:var(--txt);
-  font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;}
-.promo-input:focus{border-color:rgba(201,162,39,.5);}
-.promo-btn{padding:.6rem 1rem;border:none;border-radius:10px;
-  background:var(--z);color:var(--gold2);font-family:'Cairo',sans-serif;
-  font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;
-  border:1px solid rgba(201,162,39,.3);transition:all .2s;}
-.promo-btn:hover{background:rgba(201,162,39,.25);}
-.promo-msg{font-size:.75rem;margin-top:4px;padding:4px 8px;border-radius:8px;display:none;}
-.promo-msg.ok{display:block;color:#7fffc4;background:rgba(127,255,196,.1);}
-.promo-msg.err{display:block;color:#ff9999;background:rgba(255,100,100,.1);}
-.promo-discount-row{display:flex;justify-content:space-between;font-size:.82rem;
-  color:var(--gold2);margin-top:4px;}
 
 /* ─── LIGHTBOX ─── */
 .lb-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.96);
@@ -897,15 +828,9 @@ const PRODUCTS = [
 /* ─── CONFIG & STATE ─── */
 const USD_RATE = 1310;
 const WA_NUM   = "9647746826442";
-const TG_TOKEN = "8514160127:AAEf2Kzk4FbEPXQM8yZbZP63ZVXUuYbyc94";
-const TG_CHAT  = "209943943";
-
-/* ─── PROMO CODES ─── */
-const PROMO_CODES = {
-  "kepler_toters_1": { discount: 15, active: true },  // غير true لـ false لإيقاف الكود
-  "erthlink_kepler": { discount: 10, active: true },  // غير true لـ false لإيقاف الكود
-  "first_sh_kleper": { discount: 10, active: true },  // غير true لـ false لإيقاف الكود
-};
+/* رابط الـ Worker الآمن — يخفي توكن تيليجرام وأكواد الخصم ويتحقق من الأسعار.
+   استبدل الرابط برابط الـ Worker الخاص بك بعد نشره على Cloudflare. */
+const ORDER_API = "https://kebler-order.kkbb-iraq.workers.dev";
 var appliedPromo = null;
 const G_CLIENT_ID = "998769763298-s0f5ef138c9jora947qsn2tkrq671iud.apps.googleusercontent.com";
 
@@ -1152,27 +1077,38 @@ function applyPromo(){
   var code=(document.getElementById("promoInput").value||"").trim().toLowerCase();
   var msg=document.getElementById("promoMsg");
   if(!code){msg.className="promo-msg err";msg.textContent="أدخل الكود أولاً";return;}
-  var promo=PROMO_CODES[code];
-  if(!promo||!promo.active){
-    appliedPromo=null;
+  msg.className="promo-msg";msg.textContent="";
+  var btn=document.querySelector(".promo-btn"); if(btn){btn.disabled=true;}
+  fetch(ORDER_API+"/promo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:code})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(btn){btn.disabled=false;}
+    if(!d||!d.ok){
+      appliedPromo=null;
+      msg.className="promo-msg err";
+      msg.textContent="❌ الكود غير صحيح أو منتهي الصلاحية";
+      return;
+    }
+    appliedPromo={code:code,discount:d.discount};
+    msg.className="promo-msg ok";
+    msg.textContent="✅ تم تطبيق خصم "+d.discount+"% بنجاح!";
+    // Update summary display
+    var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+    var disc=Math.round(total*d.discount/100);
+    var afterDisc=total-disc;
+    var rows="";
+    cart.forEach(function(c){
+      rows+="<div class='ord-row'><span>"+c.name+(c.varLabel?" ("+c.varLabel+")":"")+" ×"+c.qty+"</span><span>"+fmt(c.price*c.qty)+"</span></div>";
+    });
+    var discHtml="<div class='promo-discount-row'><span>🏷️ خصم "+d.discount+"%</span><span>- "+fmt(disc,false)+" د.ع</span></div>";
+    discHtml+="<div class='ord-total'><span>الإجمالي بعد الخصم</span><span>"+fmt(afterDisc)+"</span></div>";
+    document.getElementById("ordSummary").innerHTML="<div class='ord-items'>"+rows+discHtml+"</div>";
+  })
+  .catch(function(){
+    if(btn){btn.disabled=false;}
     msg.className="promo-msg err";
-    msg.textContent="❌ الكود غير صحيح أو منتهي الصلاحية";
-    return;
-  }
-  appliedPromo={code:code,discount:promo.discount};
-  msg.className="promo-msg ok";
-  msg.textContent="✅ تم تطبيق خصم "+promo.discount+"% بنجاح!";
-  // Update summary display
-  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
-  var disc=Math.round(total*promo.discount/100);
-  var afterDisc=total-disc;
-  var rows="";
-  cart.forEach(function(c){
-    rows+="<div class='ord-row'><span>"+c.name+(c.varLabel?" ("+c.varLabel+")":"")+" ×"+c.qty+"</span><span>"+fmt(c.price*c.qty)+"</span></div>";
+    msg.textContent="تعذّر التحقق، تحقق من الاتصال";
   });
-  var discHtml="<div class='promo-discount-row'><span>🏷️ خصم "+promo.discount+"%</span><span>- "+fmt(disc,false)+" د.ع</span></div>";
-  discHtml+="<div class='ord-total'><span>الإجمالي بعد الخصم</span><span>"+fmt(afterDisc)+"</span></div>";
-  document.getElementById("ordSummary").innerHTML="<div class='ord-items'>"+rows+discHtml+"</div>";
 }
 function placeOrder(){
   var name=document.getElementById("custName").value.trim();
@@ -1180,29 +1116,12 @@ function placeOrder(){
   var addr=document.getElementById("custAddr").value.trim();
   if(!name){toast("أدخل اسمك الكريم ✍️","#e55");document.getElementById("custName").focus();return;}
   if(!phone){toast("أدخل رقم هاتفك 📞","#e55");document.getElementById("custPhone").focus();return;}
-  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
-  var payLabel={"cash":"الدفع عند الاستلام"}[payMethod]||"";
-  var orderNum=Date.now().toString().slice(-6);
-  var lines=["🛍 *طلب جديد #"+orderNum+" — كيبلر للبصريات*","━━━━━━━━━━━━━━━"];
-  cart.forEach(function(c,i){ lines.push((i+1)+". "+c.name+(c.varLabel?" - "+c.varLabel:"")+" × "+c.qty+"  ➜  "+fmt(c.price*c.qty,false)+" د.ع"); });
-  lines.push("━━━━━━━━━━━━━━━");
-  if(appliedPromo){
-    var disc=Math.round(total*appliedPromo.discount/100);
-    lines.push("💰 المجموع الأصلي: "+fmt(total,false)+" د.ع");
-    lines.push("🏷️ كود الخصم: "+appliedPromo.code+" (-"+appliedPromo.discount+"%)");
-    lines.push("✅ *الإجمالي بعد الخصم: "+fmt(total-disc,false)+" د.ع*");
-    total=total-disc;
-  } else {
-    lines.push("💰 *المجموع: "+fmt(total,false)+" د.ع*");
-  }
-  lines.push("💳 الدفع: "+payLabel,"━━━━━━━━━━━━━━━","👤 الاسم: "+name,"📞 الهاتف: "+phone);
-  if(addr) lines.push("📍 العنوان: "+addr);
-  lines.push("━━━━━━━━━━━━━━━","⏰ "+new Date().toLocaleString("ar-IQ"));
-  var msg=lines.join("\n");
-  var url="https://api.telegram.org/bot"+TG_TOKEN+"/sendMessage";
+  // نرسل أرقام المنتجات فقط — الـ Worker يحسب الأسعار والخصم من المصدر الموثوق
+  var items=cart.map(function(c){return {id:c.id,qty:c.qty,variant:c.varLabel||"",name:c.name,price:c.price};});
+  var payload={items:items,promo:appliedPromo?appliedPromo.code:"",name:name,phone:phone,addr:addr,payMethod:payMethod};
   var btn=document.querySelector(".confirm-btn");
   if(btn){btn.disabled=true;btn.textContent="⏳ جاري الإرسال...";}
-  fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:"Markdown"})})
+  fetch(ORDER_API+"/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.ok){
@@ -1215,14 +1134,13 @@ function placeOrder(){
       },300);
     } else {
       toast("حدث خطأ، حاول مرة ثانية","#e55");
-      if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب عبر WhatsApp ✓";}
+      if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
     }
   })
   .catch(function(){
     toast("تحقق من الاتصال بالإنترنت","#e55");
     if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
   });
-  toast("✓ جاري فتح WhatsApp لتأكيد طلبك 🎉");
 }
 
 /* ─── GOOGLE SIGN-IN ─── */
