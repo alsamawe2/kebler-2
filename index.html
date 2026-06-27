@@ -560,11 +560,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
         </div>
         <div class="pay-check"></div>
       </div>
-      <div class="pay-opt disabled" id="pay_zain" title="قريباً">
+      <div class="pay-opt" id="pay_zain" onclick="selPay('zain')">
         <span class="pay-icon">📱</span>
         <div class="pay-info">
-          <div class="pay-name">ZainCash <span class="pay-badge">قريباً</span></div>
-          <div class="pay-desc">دفع إلكتروني عبر محفظة زين كاش</div>
+          <div class="pay-name">ZainCash</div>
+          <div class="pay-desc">حوّل المبلغ مسبقاً عبر محفظة زين كاش</div>
         </div>
         <div class="pay-check"></div>
       </div>
@@ -576,6 +576,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
         </div>
         <div class="pay-check"></div>
       </div>
+    </div>
+    <div id="zainInfo" style="display:none;margin-top:.6rem;padding:.8rem 1rem;border:1px solid rgba(201,162,39,.3);border-radius:12px;background:var(--z);font-size:.8rem;line-height:1.8;">
+      📱 ستظهر تفاصيل التحويل عبر <b>زين كاش</b> بعد تأكيد الطلب ✅
     </div>
     <div class="ord-notice">
       📦 توصيل مجاني لجميع المحافظات · يتم التواصل معك لتأكيد الطلب خلال ساعات
@@ -1068,10 +1071,11 @@ function closeCheckout(){
   appliedPromo=null;
 }
 function selPay(m){
-  if(m!=="cash") return;
+  if(m!=="cash"&&m!=="zain") return;
   payMethod=m;
   ["cash","zain","master"].forEach(function(id){ var el=document.getElementById("pay_"+id); if(el) el.classList.remove("sel"); });
   var el=document.getElementById("pay_"+m); if(el) el.classList.add("sel");
+  var zi=document.getElementById("zainInfo"); if(zi) zi.style.display=(m==="zain")?"block":"none";
 }
 function applyPromo(){
   var code=(document.getElementById("promoInput").value||"").trim().toLowerCase();
@@ -1126,12 +1130,24 @@ function placeOrder(){
   .then(function(d){
     if(d.ok){
       if(btn){btn.disabled=false;btn.innerHTML='<span>تأكيد الطلب</span><span style="font-size:1.1rem">🚀</span><span>✓</span>';}
-      closeCheckout();
       cart=[];
       updateCartUI();
-      setTimeout(function(){
-        toast("✅ تم إرسال طلبك بنجاح! سنتواصل معك قريباً 🎉","#25d366");
-      },300);
+      if(d.zain){
+        // دفع زين كاش: نُظهر الرقم للزبون ونُبقي النافذة مفتوحة ليصوّره
+        var zi=document.getElementById("zainInfo");
+        if(zi){
+          zi.style.display="block";
+          zi.innerHTML="✅ تم استلام طلبك!<br>حوّل المبلغ إلى محفظة <b>زين كاش</b>:<br>"
+            +"<span style='font-size:1.25rem;font-weight:800;color:var(--gold2);letter-spacing:1px;'>"+d.zain+"</span><br>"
+            +"ثم أرسل صورة الإيصال على نفس الرقم لتأكيد طلبك 📤";
+        }
+        toast("✅ تم الطلب! تفاصيل التحويل ظهرت بالأسفل 👇","#25d366");
+      } else {
+        closeCheckout();
+        setTimeout(function(){
+          toast("✅ تم إرسال طلبك بنجاح! سنتواصل معك قريباً 🎉","#25d366");
+        },300);
+      }
     } else {
       toast("حدث خطأ، حاول مرة ثانية","#e55");
       if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}

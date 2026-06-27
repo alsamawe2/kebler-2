@@ -6,6 +6,7 @@
      TG_TOKEN      = توكن البوت الجديد
      TG_CHAT       = 209943943
      PROMO_CODES   = {"yourcode":{"discount":15,"active":true}}   (أكوادك السرية — تُضبط في Cloudflare فقط)
+     ZAIN_NUMBER   = رقم محفظة زين كاش (يظهر للزبون فقط بعد تأكيد الطلب)
    ============================================================ */
 
 // السماح بالوصول من موقعك فقط
@@ -101,7 +102,8 @@ export default {
       }
 
       const orderNum = Date.now().toString().slice(-6);
-      const payLabel = body.payMethod === "cash" ? "الدفع عند الاستلام" : (body.payMethod || "—");
+      const PAY_LABELS = { cash: "الدفع عند الاستلام", zain: "زين كاش (تحويل مسبق — بانتظار الإيصال)" };
+      const payLabel = PAY_LABELS[body.payMethod] || body.payMethod || "—";
       let msg = "🛍 *طلب جديد #"+orderNum+" — كيبلر للبصريات*\n━━━━━━━━━━━━━━━\n"
         + lineTexts.join("\n") + "\n━━━━━━━━━━━━━━━\n"
         + discountLine + "\n"
@@ -119,7 +121,9 @@ export default {
       });
       const d = await r.json().catch(() => ({}));
       if (!d.ok) return json({ ok:false, error:"telegram" }, origin, 502);
-      return json({ ok:true, orderNum, total }, origin);
+      const resp = { ok:true, orderNum, total };
+      if (body.payMethod === "zain") resp.zain = env.ZAIN_NUMBER || "";  // يُعاد للزبون فقط بعد الطلب
+      return json(resp, origin);
     }
 
     return json({ ok:false, error:"not found" }, origin, 404);
