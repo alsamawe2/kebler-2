@@ -91,20 +91,20 @@ export default {
         return (i+1)+". "+nm+(variant?" - "+variant:"")+" × "+qty+"  ➜  "+fmt(sum)+" د.ع";
       });
 
-      let discountLine = "💰 *المجموع: "+fmt(total)+" د.ع*";
+      let discountLine = "💰 المجموع: "+fmt(total)+" د.ع";
       const p = PROMO_CODES[promoCode];
       if (p && p.active) {
         const disc = Math.round(total * p.discount / 100);
         discountLine = "💰 المجموع الأصلي: "+fmt(total)+" د.ع\n"
           + "🏷️ كود الخصم: "+promoCode+" (-"+p.discount+"%)\n"
-          + "✅ *الإجمالي بعد الخصم: "+fmt(total-disc)+" د.ع*";
+          + "✅ الإجمالي بعد الخصم: "+fmt(total-disc)+" د.ع";
         total = total - disc;
       }
 
       const orderNum = Date.now().toString().slice(-6);
       const PAY_LABELS = { cash: "الدفع عند الاستلام", zain: "زين كاش (تحويل مسبق — بانتظار الإيصال)" };
       const payLabel = PAY_LABELS[body.payMethod] || body.payMethod || "—";
-      let msg = "🛍 *طلب جديد #"+orderNum+" — كيبلر للبصريات*\n━━━━━━━━━━━━━━━\n"
+      let msg = "🛍 طلب جديد #"+orderNum+" — كيبلر للبصريات\n━━━━━━━━━━━━━━━\n"
         + lineTexts.join("\n") + "\n━━━━━━━━━━━━━━━\n"
         + discountLine + "\n"
         + "💳 الدفع: "+payLabel+"\n━━━━━━━━━━━━━━━\n"
@@ -113,14 +113,15 @@ export default {
         + "\n━━━━━━━━━━━━━━━\n⏰ "+new Date().toLocaleString("ar-IQ");
       if (anyUnverified) msg += "\n⚠️ يحتوي منتجاً غير مُتحقَّق من سعره (حدّث PRICES في الـ Worker).";
 
+      if (!env.TG_TOKEN || !env.TG_CHAT) return json({ ok:false, error:"config", detail:"TG_TOKEN/TG_CHAT غير مضبوطة" }, origin, 500);
       const tgUrl = "https://api.telegram.org/bot" + env.TG_TOKEN + "/sendMessage";
       const r = await fetch(tgUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: env.TG_CHAT, text: msg, parse_mode: "Markdown" }),
+        body: JSON.stringify({ chat_id: env.TG_CHAT, text: msg }),  // نص عادي — أكثر أماناً (بدون Markdown)
       });
       const d = await r.json().catch(() => ({}));
-      if (!d.ok) return json({ ok:false, error:"telegram" }, origin, 502);
+      if (!d.ok) { console.log("Telegram error:", JSON.stringify(d)); return json({ ok:false, error:"telegram", detail: d.description || "" }, origin, 502); }
       const resp = { ok:true, orderNum, total };
       if (body.payMethod === "zain") resp.zain = env.ZAIN_NUMBER || "";  // يُعاد للزبون فقط بعد الطلب
       return json(resp, origin);

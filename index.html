@@ -1149,12 +1149,13 @@ function placeOrder(){
         },300);
       }
     } else {
-      toast("حدث خطأ، حاول مرة ثانية","#e55");
+      var why=(d&&d.detail)?d.detail:((d&&d.error)?d.error:"غير معروف");
+      toast("حدث خطأ: "+why,"#e55");
       if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
     }
   })
-  .catch(function(){
-    toast("تحقق من الاتصال بالإنترنت","#e55");
+  .catch(function(e){
+    toast("تعذّر الاتصال: "+(e&&e.message?e.message:"تحقق من الإنترنت"),"#e55");
     if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
   });
 }
