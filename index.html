@@ -169,6 +169,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
 .cov{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);
   backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:all .3s;}
 .cov.on{opacity:1;visibility:visible;}
+.cat-side{position:fixed;top:0;right:0;bottom:0;z-index:151;width:min(300px,86vw);
+  background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);}
+.cat-side.on{transform:translateX(0);}
+.cat-side-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;border-bottom:1px solid var(--border);}
+.cat-side-head h3{font-size:1rem;font-weight:700;color:var(--gold2);}
+.cat-side-list{padding:.6rem;overflow-y:auto;}
+.cat-side-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.85rem 1rem;
+  border-radius:12px;color:var(--txt);cursor:pointer;font-size:.95rem;transition:all .2s;border:1px solid transparent;margin-bottom:4px;}
+.cat-side-item:hover{background:var(--z);border-color:rgba(201,162,39,.3);}
+.cat-side-item.on{background:var(--z);border-color:var(--gold);color:var(--gold2);font-weight:700;}
+.cat-side-item.soon{opacity:.55;cursor:not-allowed;}
+.cat-side-badge{font-size:.62rem;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);color:var(--muted);}
 .cart-drawer{position:fixed;top:0;left:0;bottom:0;z-index:151;width:min(360px,94vw);
   background:var(--bg2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;
@@ -507,6 +520,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
 
 <!-- CATEGORY SIDEBAR (hamburger) -->
 <div class="cov" id="catCov" onclick="closeCat()"></div>
+<div class="cat-side" id="catSide">
+  <div class="cat-side-head"><h3>الأقسام</h3><button class="xbtn" onclick="closeCat()">✕</button></div>
+  <div class="cat-side-list" id="catSideList"></div>
+</div>
 
 <!-- CART DRAWER -->
 <div class="cov" id="cartCov" onclick="closeCart()"></div>
@@ -779,7 +796,7 @@ const IMGS = {
 
 
 const PRODUCTS = [
-  { id:1, name:"Chanel 4244", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:1, name:"Chanel 4244", nameAr:"", category:"نظارات شمسية",
     imgs:["img_chanel_cc_1","img_chanel_cc_2","img_chanel_cc_3","img_chanel_cc_4","img_chanel_cc_5","img_chanel_cc_6","img_chanel_dark_1","img_chanel_dark_2","img_chanel_dark_3"],
     badge:"جديد", badgeType:"new", price:28000, oldPrice:null, rating:4.9, reviews:14,
     desc:"Chanel 4244 Octagonal — إطار هندسي ثماني بعدسات متدرجة وشعار CC الذهبي" },
@@ -792,23 +809,23 @@ const PRODUCTS = [
     badge:"عرض", badgeType:"sale", price:6000, oldPrice:null, rating:4.7, reviews:67,
     desc:"Neo Plus Multi-Purpose — تنظيف وتعقيم وترطيب العدسات اللاصقة بفعالية",
     variants:[{name:"60 ml",price:6000},{name:"130 ml",price:10500}] },
-  { id:4, name:"Maybach The Titan", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:4, name:"Maybach The Titan", nameAr:"", category:"نظارات شمسية",
     imgs:["img_maybach_1","img_maybach_2","img_maybach_3","img_maybach_4","img_maybach_5","img_maybach_6","img_cartier_av_1","img_dita_1","img_dita_2"],
     badge:"فاخر", badgeType:"hot", price:25000, oldPrice:null, rating:4.9, reviews:5,
     desc:"Maybach The Titan — إطار ذهبي rimless فاخر بعدسات بنفسجية متدرجة وشعار Maybach" },
-  { id:5, name:"Louis Vuitton Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:5, name:"Louis Vuitton Rimless", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_rimless_1","img_lv_rimless_2","img_lv_rimless_3","img_lv_rimless_4","img_octa_silver_1","img_octa_silver_2","img_octa_silver_3","img_octa_silver_4","img_octa_silver_5","img_octa_silver_6"],
-    badge:"فاخر", badgeType:"hot", price:34000, oldPrice:null, rating:4.9, reviews:14,
+    badge:"فاخر", badgeType:"hot", price:24000, oldPrice:null, rating:4.9, reviews:14,
     desc:"Louis Vuitton Rimless — نظارة بدون إطار بعدسات هندسية فاتحة متدرجة وأذرع ذهبية فاخرة" },
-  { id:6, name:"Louis Vuitton White Square", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:6, name:"Louis Vuitton White Square", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_white_1","img_lv_white_2","img_lv_white_3","img_lv_white_4","img_lv_white_5","img_lv_cream_1","img_lv_cream_2","img_prada_white_1","img_prada_white_2","img_prada_white_3"],
     badge:"فاخر", badgeType:"hot", price:28000, oldPrice:null, rating:4.9, reviews:24,
     desc:"Louis Vuitton White Square — إطار أبيض عاجي مربع فاخر بعدسات بنفسجية متدرجة وشعار LV ذهبي" },
-  { id:7, name:"Prada Black", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:7, name:"Prada Black", nameAr:"", category:"نظارات شمسية",
     imgs:["img_prada_black_1","img_prada_black_2","img_prada_black_3","img_prada_black_4","img_prada_black_5","img_prada_black_6","img_lv_black_1","img_lv_black_2"],
     badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:14,
     desc:"Prada Black — إطار أسود لامع مستطيل بعدسات بنفسجية متدرجة وتصميم أنيق" },
-  { id:8, name:"Hugo Boss Polarized", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:8, name:"Hugo Boss Polarized", nameAr:"", category:"نظارات شمسية",
     imgs:["img_hugo_boss_1","img_hugo_boss_2","img_hugo_boss_3","img_hugo_boss_4","img_hugo_boss_5","img_hugo_boss_6"],
     badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:23,
     desc:"Hugo Boss Polarized — إطار بني مطفي مع عدسات بنية Polarized وحماية UV400" },
@@ -824,7 +841,7 @@ const PRODUCTS = [
     imgs:["img_dita_3","img_dita_4","img_dita_5","img_dita_6"],
     badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:7,
     desc:"DITA Mach-S — إطار aviator رمادي بجسر مزدوج وعدسات داكنة وتصميم titanium حصري" },
-  { id:13, name:"Louis Vuitton Blue Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:13, name:"Louis Vuitton Blue Rimless", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_blue_1","img_lv_blue_2","img_lv_blue_3","img_lv_blue_4"],
     badge:"فاخر", badgeType:"hot", price:19000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Louis Vuitton Rimless Blue — نظارة بدون إطار بعدسات زرقاء متدرجة فاتحة وأذرع ذهبية فاخرة وشعار Louis Vuitton" },
@@ -846,13 +863,13 @@ const PRODUCTS = [
     desc:"DITA Mach-S — إطار أسود مطفي aviator هندسي مزدوج الجسر بعدسات سوداء داكنة وتصميم titanium حصري" },
   { id:18, name:"Silver Lenses", nameAr:"Silver Lenses", category:"عدسات تجميلية",
     imgs:["img_silver_box_1","img_silver_eye_1"],
-    badge:"جديد", badgeType:"new", price:22000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:48000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Silver Lenses — عدسات تجميلية بألوان متعددة وجودة عالية لإطلالة مميزة" },
   { id:19, name:"Maybach Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_maybach_blue_1","img_maybach_blue_2","img_maybach_blue_3","img_maybach_blue_4"],
     badge:"فاخر", badgeType:"hot", price:29000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Maybach Rimless — نظارة فاخرة بدون إطار، عدسات زرقاء متدرجة متغيّرة اللون مع حماية من الضوء الأزرق، وذراعين أسود مع تفاصيل ذهبية وشعار Maybach" },
-  { id:20, name:"Bugatti Navigator", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:20, name:"Bugatti Navigator", nameAr:"", category:"نظارات شمسية",
     imgs:["img_bugatti_2","img_bugatti_1","img_bugatti_3","img_bugatti_4"],
     badge:"فاخر", badgeType:"hot", price:27000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Bugatti Navigator — نظارة شمسية فاخرة بإطار أسود مطفي وعدسات داكنة، جسر علوي مزدوج مع لمسة جلد أحمر وشعار EB، وذراعين أسود بشعار Bugatti" },
@@ -860,7 +877,7 @@ const PRODUCTS = [
     imgs:["img_lv_attitude_1","img_lv_attitude_2","img_lv_attitude_3","img_lv_attitude_4"],
     badge:"فاخر", badgeType:"hot", price:45000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Louis Vuitton Attitude — نظارة شمسية فاخرة بإطار أسود وجسر مزدوج، عدسات متدرجة، وأذرع بنقشة مونوغرام LV مع شعار LV الذهبي" },
-  { id:22, name:"Gucci Geometric", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+  { id:22, name:"Gucci Geometric", nameAr:"", category:"نظارات شمسية",
     imgs:["img_gucci_1","img_gucci_2","img_gucci_3"],
     badge:"جديد", badgeType:"new", price:25000, oldPrice:null, rating:4.9, reviews:0,
     desc:"Gucci Geometric — نظارة شمسية بإطار أسود هندسي سداسي وعدسات داكنة، مع شعار GG ونقشة Web الخضراء-الحمراء على الذراع" },
@@ -1015,7 +1032,7 @@ function renderProducts(){
         +"</div>"
         +"<div class='pbody'>"
           +"<div class='pcat'>"+p.category+"</div>"
-          +"<div class='pname'>"+p.name+"<div class='pname-sub'>"+p.nameAr+"</div></div>"
+          +"<div class='pname'>"+p.name+(p.nameAr?"<div class='pname-sub'>"+p.nameAr+"</div>":"")+"</div>"
           +varHtml
           +"<div class='p-action'>"
             +"<div class='p-price'>"+oldHtml+"<div class='p-cur' id='pr-"+p.id+"'>"+fmt(price)+"</div></div>"
@@ -1434,8 +1451,19 @@ function goHero(i){
 })();
 
 /* ─── MISC ─── */
-function closeCat(){ var el=document.getElementById("catCov"); if(el) el.classList.remove("on"); }
-function toggleCat(){}
+function renderCatSide(){
+  var box=document.getElementById("catSideList"); if(!box) return;
+  var html=CATS.map(function(c){
+    var val=(c==="الكل")?"all":c;
+    var on=(c==="الكل"&&activeCat==="all")||(c===activeCat);
+    return "<div class=\"cat-side-item"+(on?" on":"")+"\" onclick=\"selCatSide('"+val+"')\">"+c+"</div>";
+  }).join("");
+  html+="<div class=\"cat-side-item soon\"><span>نظارات طبية</span><span class=\"cat-side-badge\">قريباً</span></div>";
+  box.innerHTML=html;
+}
+function selCatSide(cat){ activeCat=cat; try{renderCatBar();}catch(e){} renderProducts(); closeCat(); window.scrollTo({top:0,behavior:"smooth"}); }
+function toggleCat(){ renderCatSide(); var s=document.getElementById("catSide"); var c=document.getElementById("catCov"); if(s)s.classList.add("on"); if(c)c.classList.add("on"); }
+function closeCat(){ var s=document.getElementById("catSide"); var c=document.getElementById("catCov"); if(s)s.classList.remove("on"); if(c)c.classList.remove("on"); }
 
 /* ─── INIT ─── */
 /* ─── RESTORE SESSION ─── */
