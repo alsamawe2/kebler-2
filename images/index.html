@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kepler — كيبلر للبصريات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ─── RESET & BASE ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#060608;--bg2:#0c0c12;--card:#111118;--card2:#18181f;
+  --gold:#c9a227;--gold2:#e0b840;--txt:#f0f0f5;--muted:#6b6b7e;
+  --border:rgba(255,255,255,.07);--radius:16px;
+  --z:rgba(201,162,39,.18);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;}
+
+/* ─── STARFIELD BACKGROUND ─── */
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* ─── NAVBAR ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
+  background:rgba(6,6,8,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 1.2rem;}
+.nav-brand{font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.04em;}
+.nav-right{display:flex;align-items:center;gap:.7rem;}
+.nav-icon{background:none;border:none;color:var(--txt);cursor:pointer;
+  width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:background .2s;position:relative;}
+.nav-icon:hover{background:rgba(255,255,255,.08);}
+#cn{position:absolute;top:4px;right:4px;min-width:17px;height:17px;border-radius:9px;
+  background:var(--gold);color:#1a1206;font-size:.65rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;
+  opacity:0;transform:scale(0);transition:all .3s;}
+#cn.show{opacity:1;transform:scale(1);}
+#cn.bump{animation:bump .35s ease;}
+@keyframes bump{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+
+/* ─── USER BUTTON ─── */
+.user-btn{display:flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:22px;padding:.28rem .7rem .28rem .4rem;
+  cursor:pointer;transition:all .2s;color:var(--txt);font-family:'Cairo',sans-serif;font-size:.82rem;}
+.user-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(201,162,39,.3);}
+.user-av{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--card2);}
+.user-av-txt{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;color:#1a1206;font-weight:700;font-size:.78rem;}
+
+/* ─── HERO ─── */
+.hero{position:relative;height:52vh;min-height:280px;margin-top:60px;overflow:hidden;}
+.hero-slides{position:absolute;inset:0;}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;}
+.hero-slide.on{opacity:1;}
+.hero-slide img{width:100%;height:100%;object-fit:cover;filter:brightness(.55);}
+.hero-overlay{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:1.5rem;
+  background:linear-gradient(to bottom,rgba(6,6,8,.2),rgba(6,6,8,.6));}
+.hero-title{font-size:clamp(1.5rem,4vw,2.5rem);font-weight:900;
+  background:linear-gradient(135deg,#fff,var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{color:rgba(240,240,245,.75);font-size:.9rem;margin-top:.4rem;}
+.hero-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;z-index:2;}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);
+  cursor:pointer;transition:all .3s;}
+.hero-dot.on{width:20px;border-radius:3px;background:var(--gold2);}
+
+/* ─── CATEGORIES ─── */
+.cats{display:flex;gap:.5rem;overflow-x:auto;padding:1rem 1rem .5rem;scrollbar-width:none;
+  position:relative;z-index:1;}
+.cats::-webkit-scrollbar{display:none;}
+.cat-btn{white-space:nowrap;padding:.42rem 1.1rem;border-radius:22px;
+  border:1px solid var(--border);background:var(--card);color:var(--muted);
+  font-family:'Cairo',sans-serif;font-size:.82rem;cursor:pointer;transition:all .22s;}
+.cat-btn:hover,.cat-btn.on{background:var(--z);border-color:var(--gold);color:var(--gold2);font-weight:600;}
+
+/* ─── PRODUCTS GRID ─── */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;padding:.5rem 1rem 6rem;position:relative;z-index:1;max-width:1200px;margin:0 auto;}
+.cat-header{grid-column:1/-1;display:flex;align-items:center;gap:10px;
+  padding:.9rem 0 .3rem;margin-top:.3rem;}
+.cat-header-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,162,39,.3));}
+.cat-header-title{font-size:.82rem;font-weight:700;color:var(--gold2);white-space:nowrap;
+  padding:2px 10px;border:1px solid rgba(201,162,39,.3);border-radius:18px;}
+
+/* ─── PRODUCT CARD ─── */
+.pcard{background:var(--card);border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);display:flex;flex-direction:column;
+  transition:transform .25s,border-color .25s,box-shadow .25s;}
+.pcard:hover{transform:translateY(-4px);border-color:rgba(201,162,39,.25);
+  box-shadow:0 12px 35px rgba(0,0,0,.45);}
+
+/* ─── GALLERY ─── */
+.gal{position:relative;width:100%;padding-top:90%;background:#0a0a0f;overflow:hidden;}
+.gal-inner{position:absolute;inset:0;}
+.gal-slide{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;z-index:0;}
+.gal-slide.on{opacity:1;z-index:2;}
+.gal-slide img{width:100%;height:100%;object-fit:cover;display:block;}
+
+/* Arrows */
+.gal-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:28px;height:28px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;font-size:.85rem;
+  opacity:0;transition:opacity .2s;border:1px solid rgba(255,255,255,.12);}
+.gal:hover .gal-arr,.pcard:hover .gal-arr{opacity:1;}
+.arr-r{right:7px;} .arr-l{left:7px;}
+
+/* Dots */
+.gal-dots{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+  z-index:3;display:flex;gap:4px;}
+.gdot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.38);
+  cursor:pointer;transition:all .28s;}
+.gdot.on{width:14px;border-radius:2px;background:var(--gold2);}
+
+/* Badge */
+.pbadge{position:absolute;top:8px;right:8px;z-index:4;padding:2px 8px;
+  border-radius:12px;font-size:.63rem;font-weight:700;}
+.bnew{background:#1a6e3c;color:#7fffc4;}
+.bhot{background:#7a1a1a;color:#ffb3b3;}
+.bsale{background:#5a3800;color:#ffd97a;}
+
+/* Overlay rating */
+.gal-ov{position:absolute;bottom:0;left:0;right:0;z-index:2;
+  background:linear-gradient(to top,rgba(6,6,8,.75),transparent);
+  padding:.3rem .5rem .5rem;display:flex;align-items:center;gap:.3rem;}
+.stars{color:var(--gold);font-size:.7rem;}
+.rev{font-size:.62rem;color:rgba(240,240,245,.6);}
+
+/* ─── CARD BODY ─── */
+.pbody{padding:.7rem .8rem .8rem;display:flex;flex-direction:column;gap:.3rem;flex:1;}
+.pcat{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.pname{font-size:.88rem;font-weight:700;line-height:1.2;color:var(--txt);}
+.pname-sub{font-size:.68rem;color:var(--muted);font-weight:400;}
+.pdesc{font-size:.7rem;color:var(--muted);line-height:1.5;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.varw{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+.vb{padding:2px 8px;border-radius:10px;font-size:.66rem;font-family:'Cairo',sans-serif;
+  border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;}
+.vb.on{border-color:var(--gold);color:var(--gold);background:rgba(201,162,39,.1);}
+
+/* Price + action row */
+.p-action{display:flex;align-items:center;justify-content:space-between;
+  gap:6px;margin-top:auto;padding-top:8px;border-top:1px solid var(--border);}
+.p-price{display:flex;flex-direction:column;gap:1px;}
+.p-old{font-size:.65rem;color:var(--muted);text-decoration:line-through;}
+.p-cur{font-size:.98rem;font-weight:700;color:var(--gold2);}
+.p-cur sup{font-size:.58rem;font-weight:500;}
+.qty-row{display:flex;align-items:center;gap:3px;}
+.qb{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);
+  background:var(--card2);color:var(--txt);font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:'Cairo',sans-serif;}
+.qb:hover{border-color:var(--gold);color:var(--gold);}
+.qv{font-size:.78rem;min-width:18px;text-align:center;}
+.addbtn{padding:.38rem .6rem;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1206;font-family:'Cairo',sans-serif;font-size:.72rem;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .2s;}
+.addbtn:hover{transform:scale(1.04);box-shadow:0 4px 14px rgba(201,162,39,.35);}
+.pcard.added{animation:added_pulse .4s ease;}
+@keyframes added_pulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 0 3px rgba(201,162,39,.4)}}
+
+/* ─── CART DRAWER ─── */
+.cov{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:all .3s;}
+.cov.on{opacity:1;visibility:visible;}
+.cart-drawer{position:fixed;top:0;left:0;bottom:0;z-index:151;width:min(360px,94vw);
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transform:translateX(-100%);transition:transform .35s cubic-bezier(.4,0,.2,1);}
+.cart-drawer.on{transform:translateX(0);}
+.cart-head{display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.2rem;border-bottom:1px solid var(--border);}
+.cart-head h3{font-size:1rem;font-weight:700;}
+.xbtn{background:rgba(255,255,255,.06);border:none;color:var(--txt);
+  width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:.9rem;transition:background .2s;}
+.xbtn:hover{background:rgba(255,255,255,.14);}
+.cart-items{flex:1;overflow-y:auto;padding:.8rem;}
+.cart-empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.cart-empty div{font-size:2rem;margin-bottom:.5rem;}
+.ci-row{display:flex;gap:.7rem;padding:.7rem 0;border-bottom:1px solid var(--border);}
+.ci-img{width:54px;height:54px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--card);}
+.ci-info{flex:1;min-width:0;}
+.ci-name{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ci-var{font-size:.68rem;color:var(--muted);}
+.ci-price{font-size:.8rem;color:var(--gold2);font-weight:700;margin-top:2px;}
+.ci-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;
+  padding:2px 6px;border-radius:6px;transition:color .2s;}
+.ci-rm:hover{color:#ff6b6b;}
+.cart-foot{padding:1rem 1.2rem;border-top:1px solid var(--border);}
+.cart-total{display:flex;justify-content:space-between;font-weight:700;margin-bottom:.8rem;}
+.checkout-btn{width:100%;padding:.85rem;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1206;font-family:'Cairo',sans-serif;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:all .2s;}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(201,162,39,.35);}
+
+/* ─── CHECKOUT MODAL ─── */
+.modal-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;visibility:hidden;transition:all .3s;}
+.modal-ov.on{opacity:1;visibility:visible;}
+.modal-box{background:var(--bg2);border-radius:24px 24px 0 0;
+  border:1px solid var(--border);width:100%;max-width:520px;
+  max-height:92vh;overflow-y:auto;padding:1.4rem 1.4rem 2rem;
+  transform:translateY(40px);transition:transform .3s;}
+.modal-ov.on .modal-box{transform:translateY(0);}
+.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:1.2rem;
+  display:flex;justify-content:space-between;align-items:center;}
+
+/* Order items summary */
+.ord-items{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;}
+.ord-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);}
+.ord-row span:last-child{color:var(--txt);font-weight:600;}
+.ord-total{display:flex;justify-content:space-between;font-size:1rem;font-weight:800;
+  padding-top:.7rem;border-top:1px solid var(--border);color:var(--gold2);}
+
+/* Customer info */
+.field-group{margin-top:1rem;}
+.field-group label{font-size:.78rem;color:var(--muted);display:block;margin-bottom:4px;}
+.field-group input{width:100%;padding:.6rem .9rem;background:var(--card);
+  border:1px solid var(--border);border-radius:10px;color:var(--txt);
+  font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;}
+.field-group input:focus{border-color:rgba(201,162,39,.5);}
+
+/* Payment methods */
+.pay-title{font-size:.82rem;color:var(--muted);margin:1.1rem 0 .5rem;}
+.pay-opts{display:flex;flex-direction:column;gap:.5rem;}
+.pay-opt{display:flex;align-items:center;gap:.8rem;padding:.75rem 1rem;
+  border-radius:12px;border:2px solid var(--border);cursor:pointer;
+  transition:all .22s;background:var(--card);}
+.pay-opt:hover:not(.disabled){border-color:rgba(201,162,39,.4);background:var(--z);}
+.pay-opt.sel{border-color:var(--gold);background:rgba(201,162,39,.1);}
+.pay-opt.disabled{opacity:.5;cursor:not-allowed;}
+.pay-icon{font-size:1.4rem;width:34px;text-align:center;}
+.pay-info{flex:1;}
+.pay-name{font-size:.88rem;font-weight:700;}
+.pay-desc{font-size:.68rem;color:var(--muted);}
+.pay-badge{font-size:.6rem;padding:2px 7px;border-radius:10px;
+  background:rgba(201,162,39,.15);color:var(--gold);border:1px solid rgba(201,162,39,.3);
+  font-weight:700;margin-right:.3rem;}
+.pay-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+  transition:all .2s;flex-shrink:0;}
+.pay-opt.sel .pay-check{border-color:var(--gold);background:var(--gold);}
+
+/* Order notice */
+.ord-notice{margin-top:1rem;padding:.8rem;border-radius:10px;
+  background:rgba(127,255,196,.07);border:1px solid rgba(127,255,196,.2);
+  font-size:.74rem;color:rgba(127,255,196,.8);line-height:1.5;}
+
+/* Confirm button */
+.confirm-btn{width:100%;padding:.95rem;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#25d366,#1db954);
+  color:#fff;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:800;
+  cursor:pointer;transition:all .25s;margin-top:1.2rem;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;}
+.confirm-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(37,211,102,.35);}
+.confirm-btn:active{transform:translateY(0);}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:80px;right:50%;transform:translateX(50%);z-index:300;
+  padding:.65rem 1.2rem;border-radius:12px;font-size:.85rem;font-weight:600;
+  background:var(--card2);border:1px solid var(--border);color:var(--txt);
+  opacity:0;visibility:hidden;transition:all .3s;white-space:nowrap;}
+.toast.on{opacity:1;visibility:visible;transform:translateX(50%) translateY(-8px);}
+
+/* ─── AUTH MODAL ─── */
+.auth-modal{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;visibility:hidden;transition:all .3s;}
+.auth-modal.on{opacity:1;visibility:visible;}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;
+  max-width:340px;width:100%;padding:2rem 1.8rem 1.8rem;text-align:center;
+  transform:scale(.92);transition:transform .3s;}
+.auth-modal.on .auth-box{transform:scale(1);}
+.auth-logo{font-size:2rem;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem;}
+.auth-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem;}
+#g_signin_btn{display:flex;justify-content:center;}
+.auth-skip{margin-top:1rem;font-size:.75rem;color:var(--muted);cursor:pointer;
+  text-decoration:underline;background:none;border:none;color:var(--muted);font-family:'Cairo',sans-serif;}
+.auth-skip:hover{color:var(--txt);}
+
+/* ─── HD COLOR CATALOG ─── */
+.hdc-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;visibility:hidden;transition:all .3s;}
+.hdc-ov.on{opacity:1;visibility:visible;}
+.hdc-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;
+  max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;
+  transform:scale(.92);transition:transform .3s;}
+.hdc-ov.on .hdc-box{transform:scale(1);}
+.hdc-head{display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 1.3rem .8rem;border-bottom:1px solid var(--border);}
+.hdc-head h3{font-size:1rem;font-weight:700;color:var(--gold2);}
+.hdc-head p{font-size:.74rem;color:var(--muted);}
+.hdc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding:1.1rem 1.3rem;overflow-y:auto;}
+.hdc-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:7px 3px;border-radius:12px;border:2px solid transparent;
+  transition:all .2s;}
+.hdc-item:hover{background:rgba(255,255,255,.04);}
+.hdc-item.sel{border-color:var(--gold);background:rgba(201,162,39,.08);}
+.hdc-lens{width:52px;height:52px;border-radius:50%;
+  box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 0 8px rgba(0,0,0,.3);
+  transition:transform .2s;}
+.hdc-item:hover .hdc-lens{transform:scale(1.1);}
+.hdc-ar{font-size:.72rem;color:var(--txt);font-weight:600;text-align:center;}
+.hdc-en{font-size:.6rem;color:var(--muted);}
+.hdc-foot{padding:.8rem 1.3rem 1.2rem;border-top:1px solid var(--border);}
+.hdc-confirm{width:100%;padding:.8rem;border:none;border-radius:12px;
+  font-family:'Cairo',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1206;
+  transition:all .22s;}
+.hdc-confirm:disabled{background:rgba(255,255,255,.06);color:var(--muted);cursor:not-allowed;}
+.hdc-confirm:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(201,162,39,.3);}
+@media(max-width:430px){.hdc-grid{grid-template-columns:repeat(3,1fr);}}
+
+/* ─── MISC ─── */
+.cat-section-wrap{grid-column:1/-1;}
+@media(max-width:380px){.pgrid{grid-template-columns:repeat(2,1fr);}}
+
+
+/* ─── SILVER LENS CATALOG ─── */
+.slv-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;visibility:hidden;transition:all .3s;}
+.slv-ov.on{opacity:1;visibility:visible;}
+.slv-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;
+  max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;
+  transform:scale(.92);transition:transform .3s;}
+.slv-ov.on .slv-box{transform:scale(1);}
+.slv-head{display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 1.3rem .8rem;border-bottom:1px solid var(--border);}
+.slv-head h3{font-size:1rem;font-weight:700;color:var(--gold2);}
+.slv-head p{font-size:.74rem;color:var(--muted);}
+.slv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding:1.1rem 1.3rem;overflow-y:auto;}
+.slv-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:7px 3px;border-radius:12px;border:2px solid transparent;
+  transition:all .2s;}
+.slv-item:hover{background:rgba(255,255,255,.04);}
+.slv-item.sel{border-color:var(--gold);background:rgba(201,162,39,.08);}
+.slv-lens{width:52px;height:52px;border-radius:50%;}
+.slv-ar{font-size:.7rem;color:var(--muted);text-align:center;}
+.slv-item.sel .slv-ar{color:var(--gold2);font-weight:700;}
+.slv-foot{padding:1rem 1.3rem;border-top:1px solid var(--border);}
+.slv-confirm{width:100%;padding:.85rem;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1206;font-family:'Cairo',sans-serif;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:all .2s;}
+.slv-confirm:disabled{opacity:.5;cursor:not-allowed;}
+
+
+/* ─── LIGHTBOX ─── */
+.lb-ov{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.96);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transition:opacity .3s;}
+.lb-ov.on{opacity:1;visibility:visible;}
+.lb-img{max-width:94vw;max-height:88vh;border-radius:12px;
+  object-fit:contain;box-shadow:0 30px 80px rgba(0,0,0,.8);
+  transition:transform .3s;}
+.lb-close{position:fixed;top:16px;right:16px;z-index:401;
+  width:42px;height:42px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.12);color:#fff;font-size:1.2rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;}
+.lb-close:hover{background:rgba(255,255,255,.25);}
+.lb-arr{position:fixed;top:50%;transform:translateY(-50%);z-index:401;
+  width:46px;height:46px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.1);color:#fff;font-size:1.6rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;backdrop-filter:blur(4px);}
+.lb-arr:hover{background:rgba(255,255,255,.22);}
+.lb-prev{left:12px;} .lb-next{right:12px;}
+.lb-counter{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  z-index:401;font-size:.82rem;color:rgba(255,255,255,.6);
+  background:rgba(0,0,0,.4);padding:4px 14px;border-radius:20px;}
+.lb-dots{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);
+  z-index:401;display:flex;gap:6px;}
+.lb-dot{width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.3);cursor:pointer;transition:all .25s;}
+.lb-dot.on{width:20px;border-radius:3px;background:var(--gold2);}
+/* Click cursor on gallery images */
+.gal-slide{cursor:zoom-in;}
+
+
+/* ─── SILVER LENS CATALOG ─── */
+.slv-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  padding:1rem;opacity:0;visibility:hidden;transition:all .3s;}
+.slv-ov.on{opacity:1;visibility:visible;}
+.slv-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;
+  max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;
+  transform:scale(.92);transition:transform .3s;}
+.slv-ov.on .slv-box{transform:scale(1);}
+.slv-head{display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 1.3rem .8rem;border-bottom:1px solid var(--border);}
+.slv-head h3{font-size:1rem;font-weight:700;color:var(--gold2);}
+.slv-head p{font-size:.74rem;color:var(--muted);}
+.slv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  padding:1.1rem 1.3rem;overflow-y:auto;}
+.slv-item{display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;padding:7px 3px;border-radius:12px;border:2px solid transparent;
+  transition:all .2s;}
+.slv-item:hover{background:rgba(255,255,255,.04);}
+.slv-item.sel{border-color:var(--gold);background:rgba(201,162,39,.08);}
+.slv-lens{width:52px;height:52px;border-radius:50%;}
+.slv-ar{font-size:.7rem;color:var(--muted);text-align:center;}
+.slv-item.sel .slv-ar{color:var(--gold2);font-weight:700;}
+.slv-foot{padding:1rem 1.3rem;border-top:1px solid var(--border);}
+.slv-confirm{width:100%;padding:.85rem;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a1206;font-family:'Cairo',sans-serif;font-size:.95rem;font-weight:700;
+  cursor:pointer;transition:all .2s;}
+.slv-confirm:disabled{opacity:.5;cursor:not-allowed;}
+
+
+/* ─── PROMO CODE ─── */
+.promo-row{display:flex;gap:6px;margin-top:1rem;}
+.promo-input{flex:1;padding:.6rem .9rem;background:var(--card);
+  border:1px solid var(--border);border-radius:10px;color:var(--txt);
+  font-family:'Cairo',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;}
+.promo-input:focus{border-color:rgba(201,162,39,.5);}
+.promo-btn{padding:.6rem 1rem;border:none;border-radius:10px;
+  background:var(--z);color:var(--gold2);font-family:'Cairo',sans-serif;
+  font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap;
+  border:1px solid rgba(201,162,39,.3);transition:all .2s;}
+.promo-btn:hover{background:rgba(201,162,39,.25);}
+.promo-msg{font-size:.75rem;margin-top:4px;padding:4px 8px;border-radius:8px;display:none;}
+.promo-msg.ok{display:block;color:#7fffc4;background:rgba(127,255,196,.1);}
+.promo-msg.err{display:block;color:#ff9999;background:rgba(255,100,100,.1);}
+.promo-discount-row{display:flex;justify-content:space-between;font-size:.82rem;
+  color:var(--gold2);margin-top:4px;}
+
+/* ─── LIGHTBOX ─── */
+.lb-ov{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.95);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;transition:opacity .3s;}
+.lb-ov.on{opacity:1;visibility:visible;}
+.lb-img{max-width:94vw;max-height:88vh;border-radius:10px;
+  object-fit:contain;box-shadow:0 0 60px rgba(0,0,0,.8);
+  transition:opacity .25s;}
+.lb-img.fade{opacity:0;}
+.lb-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.1);
+  border:none;color:#fff;font-size:1.4rem;width:42px;height:42px;border-radius:50%;
+  cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;}
+.lb-close:hover{background:rgba(255,255,255,.22);}
+.lb-arr{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);
+  border:none;color:#fff;font-size:1.8rem;width:46px;height:46px;border-radius:50%;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.lb-arr:hover{background:rgba(255,255,255,.22);}
+.lb-prev{left:14px;} .lb-next{right:14px;}
+.lb-counter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.6);font-size:.82rem;}
+.lb-dots{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;}
+.lb-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);
+  cursor:pointer;transition:all .25s;}
+.lb-dot.on{background:var(--gold2);width:18px;border-radius:3px;}
+.gal-expand{position:absolute;top:8px;left:8px;z-index:4;
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;padding:4px 7px;font-size:.75rem;color:#fff;
+  cursor:pointer;opacity:0;transition:opacity .2s;backdrop-filter:blur(4px);}
+.gal:hover .gal-expand,.pcard:hover .gal-expand{opacity:1;}
+</style>
+</head>
+<body>
+<canvas id="bgc"></canvas>
+
+<!-- NAVBAR -->
+<nav>
+  <button class="nav-icon" onclick="toggleCat()">☰</button>
+  <div class="nav-brand">Kepler · كيبلر</div>
+  <div class="nav-right">
+    <button class="user-btn" id="userBtn" onclick="openAuth()">
+      <div class="user-av-txt" id="userAvTxt">؟</div>
+      <span id="userNameTxt">تسجيل الدخول</span>
+    </button>
+    <button class="nav-icon" onclick="openCart()" style="position:relative">
+      🛒<span id="cn"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-slides" id="heroSlides"></div>
+  <div class="hero-overlay">
+    <h1 class="hero-title">كيبلر للبصريات</h1>
+    <p class="hero-sub">نظارات وعدسات — ماستر كوالتي</p>
+  </div>
+  <div class="hero-dots" id="heroDots"></div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="cats" id="catsBar"></div>
+
+<!-- GRID -->
+<div class="pgrid" id="pgrid"></div>
+
+<!-- CATEGORY SIDEBAR (hamburger) -->
+<div class="cov" id="catCov" onclick="closeCat()"></div>
+
+<!-- CART DRAWER -->
+<div class="cov" id="cartCov" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-head">
+    <h3>🛒 سلة المشتريات</h3>
+    <button class="xbtn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="cart-total"><span>المجموع</span><span id="cartTotal">0 د.ع</span></div>
+    <button class="checkout-btn" onclick="openCheckout()">متابعة الطلب ←</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-ov" id="checkoutModal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>إتمام الطلب</span>
+      <button class="xbtn" onclick="closeCheckout()">✕</button>
+    </div>
+    <div id="ordSummary"></div>
+    <div class="field-group">
+      <label>الاسم الكريم</label>
+      <input id="custName" type="text" placeholder="اكتب اسمك هنا">
+    </div>
+    <div class="field-group">
+      <label>رقم الهاتف</label>
+      <input id="custPhone" type="tel" placeholder="07xxxxxxxxx">
+    </div>
+    <div class="field-group">
+      <label>العنوان</label>
+      <input id="custAddr" type="text" placeholder="المحافظة / المنطقة">
+    </div>
+    <div class="field-group" style="margin-top:.8rem;">
+      <label>🏷️ كود الخصم (اختياري)</label>
+      <div class="promo-row">
+        <input id="promoInput" class="promo-input" type="text" placeholder="أدخل الكود هنا">
+        <button class="promo-btn" onclick="applyPromo()">تطبيق</button>
+      </div>
+      <div class="promo-msg" id="promoMsg"></div>
+    </div>
+    <div class="pay-title">طريقة الدفع</div>
+    <div class="pay-opts">
+      <div class="pay-opt sel" id="pay_cash" onclick="selPay('cash')">
+        <span class="pay-icon">💵</span>
+        <div class="pay-info">
+          <div class="pay-name">الدفع عند الاستلام</div>
+          <div class="pay-desc">المندوب يفحص المنتج معك قبل الدفع</div>
+        </div>
+        <div class="pay-check"></div>
+      </div>
+      <div class="pay-opt" id="pay_zain" onclick="selPay('zain')">
+        <span class="pay-icon">📱</span>
+        <div class="pay-info">
+          <div class="pay-name">ZainCash</div>
+          <div class="pay-desc">حوّل المبلغ مسبقاً عبر محفظة زين كاش</div>
+        </div>
+        <div class="pay-check"></div>
+      </div>
+      <div class="pay-opt disabled" id="pay_master" title="قريباً">
+        <span class="pay-icon">💳</span>
+        <div class="pay-info">
+          <div class="pay-name">Mastercard <span class="pay-badge">قريباً</span></div>
+          <div class="pay-desc">دفع ببطاقة ائتمانية مباشرة</div>
+        </div>
+        <div class="pay-check"></div>
+      </div>
+    </div>
+    <div id="zainInfo" style="display:none;margin-top:.6rem;padding:.8rem 1rem;border:1px solid rgba(201,162,39,.3);border-radius:12px;background:var(--z);font-size:.8rem;line-height:1.8;">
+      📱 ستظهر تفاصيل التحويل عبر <b>زين كاش</b> بعد تأكيد الطلب ✅
+    </div>
+    <div class="ord-notice">
+      📦 توصيل مجاني لجميع المحافظات · يتم التواصل معك لتأكيد الطلب خلال ساعات
+    </div>
+    <button class="confirm-btn" onclick="placeOrder()">
+      <span>تأكيد الطلب</span>
+      <span style="font-size:1.1rem">🚀</span>
+      <span>✓</span>
+    </button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-modal" id="authModal">
+  <div class="auth-box">
+    <div class="auth-logo">Kepler</div>
+    <p class="auth-sub">سجّل دخولك لمتابعة طلباتك وتجربة أفضل</p>
+    <div id="g_signin_btn"></div>
+    <div style="margin-top:.8rem;font-size:.72rem;color:var(--muted);">أو</div>
+    <button class="auth-skip" onclick="closeAuth()">تخطي — تسوّق بدون حساب</button>
+  </div>
+</div>
+
+<!-- HD COLOR CATALOG -->
+<div class="hdc-ov" id="hdcModal">
+  <div class="hdc-box">
+    <div class="hdc-head">
+      <div>
+        <h3>كتالوج ألوان HD Lenses</h3>
+        <p>اختر اللون المناسب — 16 لون فرنسي أصيل</p>
+      </div>
+      <button class="xbtn" onclick="closeHDC()">✕</button>
+    </div>
+    <div class="hdc-grid" id="hdcGrid"></div>
+    <div class="hdc-foot">
+      <button class="hdc-confirm" id="hdcBtn" onclick="confirmHDC()" disabled>اختر لوناً أولاً</button>
+    </div>
+  </div>
+</div>
+
+<!-- SILVER LENS CATALOG -->
+<div class="slv-ov" id="slvModal">
+  <div class="slv-box">
+    <div class="slv-head">
+      <div>
+        <h3>كتالوج ألوان Silver Lenses</h3>
+        <p>اختر اللون المناسب</p>
+      </div>
+      <button class="xbtn" onclick="closeSLV()">✕</button>
+    </div>
+    <div class="slv-grid" id="slvGrid"></div>
+    <div class="slv-foot">
+      <button class="slv-confirm" id="slvBtn" onclick="confirmSLV()" disabled>اختر لوناً أولاً</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+
+
+/* ══════════════════════════════════════════
+   KEPLER.IQ — FULL CLEAN REBUILD
+   ══════════════════════════════════════════ */
+
+/* ─── DATA ─── */
+const IMGS = {
+  img_hd_lenses_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hd_lenses_1.jpg",
+  img_hd_lenses_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hd_lenses_2.jpg",
+  img_neo_solution_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_neo_solution_1.jpg",
+  img_neo_solution_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_neo_solution_2.jpg",
+  img_lv_cream_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_cream_1.jpg",
+  img_lv_cream_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_cream_2.jpg",
+  img_chanel_cc_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_1.jpg",
+  img_chanel_cc_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_2.jpg",
+  img_chanel_cc_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_3.jpg",
+  img_chanel_cc_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_4.jpg",
+  img_chanel_cc_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_5.jpg",
+  img_chanel_cc_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_cc_6.jpg",
+  img_maybach_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_1.jpg",
+  img_maybach_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_2.jpg",
+  img_maybach_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_3.jpg",
+  img_maybach_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_4.jpg",
+  img_maybach_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_5.jpg",
+  img_maybach_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_6.jpg",
+  img_chanel_dark_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_dark_1.jpg",
+  img_chanel_dark_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_dark_2.jpg",
+  img_chanel_dark_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_chanel_dark_3.jpg",
+  img_octa_silver_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_1.jpg",
+  img_octa_silver_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_2.jpg",
+  img_octa_silver_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_3.jpg",
+  img_octa_silver_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_4.jpg",
+  img_octa_silver_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_5.jpg",
+  img_octa_silver_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_octa_silver_6.jpg",
+  img_prada_black_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_1.jpg",
+  img_prada_black_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_2.jpg",
+  img_prada_black_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_3.jpg",
+  img_prada_black_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_4.jpg",
+  img_prada_black_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_5.jpg",
+  img_prada_black_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_black_6.jpg",
+  img_hugo_boss_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_1.jpg",
+  img_hugo_boss_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_2.jpg",
+  img_hugo_boss_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_3.jpg",
+  img_hugo_boss_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_4.jpg",
+  img_hugo_boss_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_5.jpg",
+  img_hugo_boss_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_hugo_boss_6.jpg",
+  img_lv_rimless_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_rimless_1.jpg",
+  img_lv_rimless_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_rimless_2.jpg",
+  img_lv_rimless_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_rimless_3.jpg",
+  img_lv_rimless_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_rimless_4.jpg",
+  img_dita_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_1.jpg",
+  img_dita_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_2.jpg",
+  img_dita_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_3.jpg",
+  img_dita_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_4.jpg",
+  img_dita_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_5.jpg",
+  img_dita_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_6.jpg",
+  img_prada_white_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_1.jpg",
+  img_prada_white_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_2.jpg",
+  img_prada_white_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_3.jpg",
+  img_prada_white_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_4.jpg",
+  img_prada_white_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_5.jpg",
+  img_prada_white_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_white_6.jpg",
+  img_lv_white_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_white_1.jpg",
+  img_lv_white_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_white_2.jpg",
+  img_lv_white_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_white_3.jpg",
+  img_lv_white_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_white_4.jpg",
+  img_lv_white_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_white_5.jpg",
+  img_lv_black_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_black_1.jpg",
+  img_lv_black_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_black_2.jpg",
+  img_cartier_av_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_cartier_av_1.jpg",
+  img_prada_octa_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_1.jpg",
+  img_prada_octa_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_2.jpg",
+  img_prada_octa_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_3.jpg",
+  img_prada_octa_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_4.jpg",
+  img_prada_octa_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_5.jpg",
+  img_prada_octa_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_prada_octa_6.jpg",
+  img_matsuda_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_1.jpg",
+  img_matsuda_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_2.jpg",
+  img_matsuda_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_3.jpg",
+  img_matsuda_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_4.jpg",
+  img_matsuda_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_5.jpg",
+  img_matsuda_6: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_matsuda_6.jpg",
+  img_round_misc_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_round_misc_1.jpg",
+  img_lv_blue_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_blue_1.jpg",
+  img_lv_blue_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_blue_2.jpg",
+  img_lv_blue_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_blue_3.jpg",
+  img_lv_blue_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_blue_4.jpg",
+  img_cartier_ct_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_cartier_ct_1.jpg",
+  img_cartier_ct_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_cartier_ct_2.jpg",
+  img_cartier_ct_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_cartier_ct_3.jpg",
+  img_cartier_ct_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_cartier_ct_4.jpg",
+  img_dg_2270_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dg_2270_1.jpg",
+  img_dg_2270_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dg_2270_2.jpg",
+  img_dg_2270_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dg_2270_3.jpg",
+  img_dg_2270_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dg_2270_4.jpg",
+  img_tf_raquel_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_raquel_1.jpg",
+  img_tf_raquel_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_raquel_2.jpg",
+  img_tf_raquel_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_raquel_3.jpg",
+  img_dita_black_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_black_1.jpg",
+  img_dita_black_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_black_2.jpg",
+  img_dita_black_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_dita_black_3.jpg",
+  img_silver_box_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_silver_box_1.jpg",
+  img_silver_eye_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_silver_eye_1.jpg",
+  img_maybach_blue_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_blue_1.jpg.JPG",
+  img_maybach_blue_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_blue_2.jpg.JPG",
+  img_maybach_blue_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_blue_3.jpg.JPG",
+  img_maybach_blue_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_maybach_blue_4.jpg.JPG",
+  img_bugatti_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_bugatti_1.JPG",
+  img_bugatti_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_bugatti_2.JPG",
+  img_bugatti_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_bugatti_3.JPG",
+  img_bugatti_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_bugatti_4.JPG",
+  img_lv_attitude_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_attitude_1.JPG",
+  img_lv_attitude_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_attitude_2.JPG",
+  img_lv_attitude_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_attitude_3.JPG",
+  img_lv_attitude_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_lv_attitude_4.JPG",
+  img_gucci_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_gucci_1.JPG",
+  img_gucci_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_gucci_2.JPG",
+  img_gucci_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_gucci_3.JPG",
+  img_rayban_ferrari_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_rayban_ferrari_1.JPG",
+  img_rayban_ferrari_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_rayban_ferrari_2.JPG",
+  img_rayban_ferrari_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_rayban_ferrari_3.JPG",
+  img_rayban_ferrari_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_rayban_ferrari_4.JPG",
+  img_aedoll_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_aedoll_1.JPG",
+  img_aedoll_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_aedoll_2.JPG",
+  img_aedoll_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_aedoll_3.JPG",
+  img_aedoll_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_aedoll_4.JPG",
+  img_aedoll_5: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_aedoll_5.JPG"
+};
+
+
+const PRODUCTS = [
+  { id:1, name:"Chanel 4244", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_chanel_cc_1","img_chanel_cc_2","img_chanel_cc_3","img_chanel_cc_4","img_chanel_cc_5","img_chanel_cc_6","img_chanel_dark_1","img_chanel_dark_2","img_chanel_dark_3"],
+    badge:"جديد", badgeType:"new", price:28000, oldPrice:null, rating:4.9, reviews:14,
+    desc:"Chanel 4244 Octagonal — إطار هندسي ثماني بعدسات متدرجة وشعار CC الذهبي" },
+  { id:2, name:"عدسات HD الفرنسية", nameAr:"HD Lenses", category:"عدسات تجميلية",
+    imgs:["img_hd_lenses_1","img_hd_lenses_2"],
+    badge:"الأكثر مبيعاً", badgeType:"hot", price:52000, oldPrice:null, rating:4.9, reviews:134,
+    desc:"HD Lenses Made in France — عدسات Hydrogel فرنسية بـ16 لون حيوي ورطوبة 12 ساعة" },
+  { id:3, name:"محلول NEO PLUS", nameAr:"Neo Plus", category:"محلول عدسات",
+    imgs:["img_neo_solution_1","img_neo_solution_2"],
+    badge:"عرض", badgeType:"sale", price:6000, oldPrice:null, rating:4.7, reviews:67,
+    desc:"Neo Plus Multi-Purpose — تنظيف وتعقيم وترطيب العدسات اللاصقة بفعالية",
+    variants:[{name:"60 ml",price:6000},{name:"130 ml",price:10500}] },
+  { id:4, name:"Maybach The Titan", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_maybach_1","img_maybach_2","img_maybach_3","img_maybach_4","img_maybach_5","img_maybach_6","img_cartier_av_1","img_dita_1","img_dita_2"],
+    badge:"فاخر", badgeType:"hot", price:48000, oldPrice:null, rating:4.9, reviews:5,
+    desc:"Maybach The Titan — إطار ذهبي rimless فاخر بعدسات بنفسجية متدرجة وشعار Maybach" },
+  { id:5, name:"Louis Vuitton Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_lv_rimless_1","img_lv_rimless_2","img_lv_rimless_3","img_lv_rimless_4","img_octa_silver_1","img_octa_silver_2","img_octa_silver_3","img_octa_silver_4","img_octa_silver_5","img_octa_silver_6"],
+    badge:"فاخر", badgeType:"hot", price:34000, oldPrice:null, rating:4.9, reviews:14,
+    desc:"Louis Vuitton Rimless — نظارة بدون إطار بعدسات هندسية فاتحة متدرجة وأذرع ذهبية فاخرة" },
+  { id:6, name:"Louis Vuitton White Square", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_lv_white_1","img_lv_white_2","img_lv_white_3","img_lv_white_4","img_lv_white_5","img_lv_cream_1","img_lv_cream_2","img_prada_white_1","img_prada_white_2","img_prada_white_3"],
+    badge:"فاخر", badgeType:"hot", price:19000, oldPrice:null, rating:4.9, reviews:24,
+    desc:"Louis Vuitton White Square — إطار أبيض عاجي مربع فاخر بعدسات بنفسجية متدرجة وشعار LV ذهبي" },
+  { id:7, name:"Prada Black", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_prada_black_1","img_prada_black_2","img_prada_black_3","img_prada_black_4","img_prada_black_5","img_prada_black_6","img_lv_black_1","img_lv_black_2"],
+    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:14,
+    desc:"Prada Black — إطار أسود لامع مستطيل بعدسات بنفسجية متدرجة وتصميم أنيق" },
+  { id:8, name:"Hugo Boss Polarized", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_hugo_boss_1","img_hugo_boss_2","img_hugo_boss_3","img_hugo_boss_4","img_hugo_boss_5","img_hugo_boss_6"],
+    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:23,
+    desc:"Hugo Boss Polarized — إطار بني مطفي مع عدسات بنية Polarized وحماية UV400" },
+  { id:10, name:"Prada PR 60VS Baroque", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_prada_octa_1","img_prada_octa_2","img_prada_octa_3","img_prada_octa_4","img_prada_octa_5","img_prada_octa_6"],
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:4,
+    desc:"Prada PR 60VS — إطار ذهبي octagonal بعدسات بنية متدرجة وذراع بخط أحمر مميز" },
+  { id:11, name:"Matsuda Steampunk", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_matsuda_1","img_matsuda_2","img_matsuda_3","img_matsuda_4","img_matsuda_5","img_matsuda_6"],
+    badge:"جديد", badgeType:"new", price:48000, oldPrice:null, rating:4.9, reviews:11,
+    desc:"Matsuda Steampunk — نظارة دائرية يابانية بعدسات ND قابلة للتعديل وزنبركات ذهبية" },
+  { id:12, name:"DITA Mach-S Aviator", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_dita_3","img_dita_4","img_dita_5","img_dita_6"],
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:7,
+    desc:"DITA Mach-S — إطار aviator رمادي بجسر مزدوج وعدسات داكنة وتصميم titanium حصري" },
+  { id:13, name:"Louis Vuitton Blue Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_lv_blue_1","img_lv_blue_2","img_lv_blue_3","img_lv_blue_4"],
+    badge:"فاخر", badgeType:"hot", price:34000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Louis Vuitton Rimless Blue — نظارة بدون إطار بعدسات زرقاء متدرجة فاتحة وأذرع ذهبية فاخرة وشعار Louis Vuitton" },
+  { id:14, name:"Cartier CT0271S", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_cartier_ct_1","img_cartier_ct_2","img_cartier_ct_3","img_cartier_ct_4"],
+    badge:"جديد", badgeType:"new", price:42000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Cartier CT0271S — إطار أسود مزدوج الجسر بعدسات زرقاء-وردية متدرجة وذراع Cartier مخططة فاخرة" },
+  { id:15, name:"Dolce & Gabbana DG2270", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_dg_2270_1","img_dg_2270_2","img_dg_2270_3","img_dg_2270_4"],
+    badge:"جديد", badgeType:"new", price:38000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Dolce & Gabbana DG2270 — إطار ذهبي aviator مزدوج الجسر بجانبيات شبكية مثقبة وعدسات بنفسجية متدرجة وذراع جلدية فاخرة" },
+  { id:16, name:"Tom Ford FT0972 Raquel", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_tf_raquel_1","img_tf_raquel_2","img_tf_raquel_3"],
+    badge:"جديد", badgeType:"new", price:36000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Tom Ford FT0972 Raquel — إطار ذهبي هندسي ثماني بعدسات بنية متدرجة وذراع داكنة فاخرة بشعار TOM FORD" },
+  { id:17, name:"DITA Mach-S Aviator Black", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_dita_black_1","img_dita_black_2","img_dita_black_3"],
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"DITA Mach-S — إطار أسود مطفي aviator هندسي مزدوج الجسر بعدسات سوداء داكنة وتصميم titanium حصري" },
+  { id:18, name:"Silver Lenses", nameAr:"Silver Lenses", category:"عدسات تجميلية",
+    imgs:["img_silver_box_1","img_silver_eye_1"],
+    badge:"جديد", badgeType:"new", price:22000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Silver Lenses — عدسات تجميلية بألوان متعددة وجودة عالية لإطلالة مميزة" },
+  { id:19, name:"Maybach Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_maybach_blue_1","img_maybach_blue_2","img_maybach_blue_3","img_maybach_blue_4"],
+    badge:"فاخر", badgeType:"hot", price:32000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Maybach Rimless — نظارة فاخرة بدون إطار، عدسات زرقاء متدرجة متغيّرة اللون مع حماية من الضوء الأزرق، وذراعين أسود مع تفاصيل ذهبية وشعار Maybach" },
+  { id:20, name:"Bugatti Navigator", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_bugatti_2","img_bugatti_1","img_bugatti_3","img_bugatti_4"],
+    badge:"فاخر", badgeType:"hot", price:42000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Bugatti Navigator — نظارة شمسية فاخرة بإطار أسود مطفي وعدسات داكنة، جسر علوي مزدوج مع لمسة جلد أحمر وشعار EB، وذراعين أسود بشعار Bugatti" },
+  { id:21, name:"Louis Vuitton Attitude", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_lv_attitude_1","img_lv_attitude_2","img_lv_attitude_3","img_lv_attitude_4"],
+    badge:"فاخر", badgeType:"hot", price:45000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Louis Vuitton Attitude — نظارة شمسية فاخرة بإطار أسود وجسر مزدوج، عدسات متدرجة، وأذرع بنقشة مونوغرام LV مع شعار LV الذهبي" },
+  { id:22, name:"Gucci Geometric", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_gucci_1","img_gucci_2","img_gucci_3"],
+    badge:"جديد", badgeType:"new", price:25000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Gucci Geometric — نظارة شمسية بإطار أسود هندسي سداسي وعدسات داكنة، مع شعار GG ونقشة Web الخضراء-الحمراء على الذراع" },
+  { id:23, name:"Ray-Ban Ferrari RB3617M", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_rayban_ferrari_1","img_rayban_ferrari_2","img_rayban_ferrari_3","img_rayban_ferrari_4"],
+    badge:"رائج", badgeType:"hot", price:32000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Ray-Ban Scuderia Ferrari RB3617M — نظارة شمسية بإطار معدني فضي وجسر مزدوج، عدسات رمادية، مع شعار Ferrari وأذرع تحمل اسم Ferrari" },
+  { id:24, name:"Aedoll Round", nameAr:"نظارة دائرية", category:"نظارات شمسية",
+    imgs:["img_aedoll_1","img_aedoll_2","img_aedoll_3","img_aedoll_4","img_aedoll_5"],
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0,
+    desc:"Aedoll Round — نظارة شمسية دائرية كلاسيكية بحماية UV400، متوفرة بلونين: إطار ذهبي بعدسات متدرجة وردية، وإطار أسود بعدسات داكنة",
+    variants:[{name:"ذهبي / عدسة وردية",price:34000},{name:"أسود / عدسة داكنة",price:34000}] },
+];
+
+
+/* ─── CONFIG & STATE ─── */
+const USD_RATE = 1310;
+const WA_NUM   = "9647746826442";
+/* رابط الـ Worker الآمن — يخفي توكن تيليجرام وأكواد الخصم ويتحقق من الأسعار.
+   استبدل الرابط برابط الـ Worker الخاص بك بعد نشره على Cloudflare. */
+const ORDER_API = "https://kebler-order.kkbb-iraq.workers.dev";
+var appliedPromo = null;
+const G_CLIENT_ID = "998769763298-s0f5ef138c9jora947qsn2tkrq671iud.apps.googleusercontent.com";
+
+let cart=[], user=null, curMode="IQD", payMethod="cash";
+const qtyMap={}, varMap={}, galIdx={};
+PRODUCTS.forEach(function(p){
+  qtyMap[p.id]=1;
+  if(p.variants) varMap[p.id]=0;
+  galIdx[p.id]=0;
+});
+
+/* ─── HELPERS ─── */
+function imgUrl(k){ return (k&&k.startsWith("data:"))?k:(IMGS[k]||""); }
+function fmt(n,c){
+  if(c===undefined) c=true;
+  if(n==null) return "";
+  if(curMode==="USD"){ var v=(n/USD_RATE).toFixed(1); return c?v+" <sup>$</sup>":v+" $"; }
+  var s=Number(n).toLocaleString("en-US");
+  return c?s+" <sup>د.ع</sup>":s+" د.ع";
+}
+function getPrice(p){
+  var vi=varMap[p.id]!==undefined?varMap[p.id]:-1;
+  return (vi>=0&&p.variants)?p.variants[vi].price:p.price;
+}
+function toast(msg,col){
+  col=col||"#25d366";
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.style.background=col;
+  t.classList.remove("on"); void t.offsetWidth; t.classList.add("on");
+  clearTimeout(window._tt); window._tt=setTimeout(function(){t.classList.remove("on");},2600);
+}
+
+/* ─── CATEGORIES ─── */
+const CATS=["الكل","نظارات شمسية","عدسات تجميلية","محلول عدسات"];
+var activeCat="all";
+function renderCatBar(){
+  var bar=document.getElementById("catsBar"); if(!bar) return;
+  var html=CATS.map(function(c){
+    var val=(c==="الكل")?"all":c;
+    var on=(c==="الكل"&&activeCat==="all")||(c===activeCat);
+    return "<button class=\"cat-btn"+(on?" on":"")+"\" onclick=\"selCat('"+val+"',this)\">"+c+"</button>";
+  }).join("");
+  bar.innerHTML=html;
+}
+function selCat(cat,el){
+  activeCat=cat;
+  document.querySelectorAll(".cat-btn").forEach(function(b){b.classList.remove("on");});
+  if(el) el.classList.add("on");
+  renderProducts();
+}
+
+/* ─── GALLERY ─── */
+function _applyGal(pid){
+  var idx=galIdx[pid]||0;
+  var el=document.getElementById("gal-"+pid); if(!el) return;
+  el.querySelectorAll(".gal-slide").forEach(function(s,i){s.classList.toggle("on",i===idx);});
+  el.querySelectorAll(".gdot").forEach(function(d,i){d.classList.toggle("on",i===idx);});
+}
+function slideGal(pid,dir){
+  var p=PRODUCTS.find(function(x){return x.id===pid;});
+  if(!p||p.imgs.length<2) return;
+  galIdx[pid]=((galIdx[pid]||0)+dir+p.imgs.length)%p.imgs.length;
+  _applyGal(pid);
+}
+function goSlide(pid,idx){ galIdx[pid]=idx; _applyGal(pid); }
+
+/* ─── RENDER ─── */
+function renderProducts(){
+  var grid=document.getElementById("pgrid"); if(!grid) return;
+  var filtered=(activeCat==="all")?PRODUCTS:PRODUCTS.filter(function(p){return p.category===activeCat;});
+  if(!filtered.length){
+    grid.innerHTML="<p style='color:var(--muted);padding:2rem;grid-column:1/-1;text-align:center'>لا توجد منتجات</p>";
+    return;
+  }
+  var cats=[]; filtered.forEach(function(p){if(cats.indexOf(p.category)<0)cats.push(p.category);});
+  var html="";
+  cats.forEach(function(cat){
+    var items=filtered.filter(function(p){return p.category===cat;});
+    if(activeCat==="all"){
+      html+="<div class='cat-header' style='grid-column:1/-1'>"
+        +"<div class='cat-header-line'></div>"
+        +"<div class='cat-header-title'>"+cat+"</div>"
+        +"<div class='cat-header-line' style='transform:scaleX(-1)'></div></div>";
+    }
+    items.forEach(function(p){
+      var price=getPrice(p);
+      var vi=varMap[p.id]!==undefined?varMap[p.id]:-1;
+      var imgs=p.imgs||[];
+      var slides="";
+      imgs.forEach(function(k,i){
+        slides+="<div class='gal-slide"+(i===0?" on":"")+"'>"
+          +"<img src='"+imgUrl(k)+"' alt='"+p.name+"'>"
+          +"</div>";
+      });
+      var dots="";
+      if(imgs.length>1){
+        dots="<div class='gal-dots'>";
+        imgs.forEach(function(_,i){ dots+="<span class='gdot"+(i===0?" on":"")+"' onclick='goSlide("+p.id+","+i+")'></span>"; });
+        dots+="</div>";
+      }
+      var arrows=(imgs.length>1)
+        ?"<button class='gal-arr arr-r' onclick='slideGal("+p.id+",-1)'>›</button>"
+         +"<button class='gal-arr arr-l' onclick='slideGal("+p.id+",1)'>‹</button>"
+        :"";
+      var expand="<button class='gal-expand' onclick='openLB(event,"+p.id+")'>⤢</button>";
+      var bc=(p.badgeType==="hot")?"bhot":(p.badgeType==="sale")?"bsale":"bnew";
+      var varHtml="";
+      if(p.variants){
+        varHtml="<div class='varw'>";
+        p.variants.forEach(function(v,i){
+          varHtml+="<button class='vb"+(i===0?" on":"")+"' onclick='setVar("+p.id+","+i+",this)'>"+v.name+"</button>";
+        });
+        varHtml+="</div>";
+      }
+      var oldHtml=p.oldPrice?"<div class='p-old'>"+fmt(p.oldPrice,false)+"</div>":"";
+      var stars="★".repeat(Math.floor(p.rating))+"☆".repeat(5-Math.floor(p.rating));
+      html+="<div class='pcard' id='pcard-"+p.id+"'>"
+        +"<div class='gal' id='gal-"+p.id+"'>"
+          +"<div class='gal-inner'>"+slides+"</div>"
+          +expand+arrows+dots
+          +"<div class='pbadge "+bc+"'>"+p.badge+"</div>"
+          +"<div class='gal-ov'><span class='stars'>"+stars+"</span><span class='rev'>("+p.reviews+")</span></div>"
+        +"</div>"
+        +"<div class='pbody'>"
+          +"<div class='pcat'>"+p.category+"</div>"
+          +"<div class='pname'>"+p.name+"<div class='pname-sub'>"+p.nameAr+"</div></div>"
+          +varHtml
+          +"<div class='p-action'>"
+            +"<div class='p-price'>"+oldHtml+"<div class='p-cur' id='pr-"+p.id+"'>"+fmt(price)+"</div></div>"
+            +"<div style='display:flex;align-items:center;gap:5px'>"
+              +"<div class='qty-row'>"
+                +"<button class='qb' onclick='chQ("+p.id+",-1)'>−</button>"
+                +"<span class='qv' id='qv-"+p.id+"'>"+(qtyMap[p.id]||1)+"</span>"
+                +"<button class='qb' onclick='chQ("+p.id+",1)'>+</button>"
+              +"</div>"
+              +"<button class='addbtn' onclick='addCart("+p.id+",this)'>أضف 🛒</button>"
+            +"</div>"
+          +"</div>"
+        +"</div></div>";
+    });
+  });
+  grid.innerHTML=html;
+}
+
+/* ─── QTY / VARIANT ─── */
+function chQ(pid,d){
+  qtyMap[pid]=Math.max(1,(qtyMap[pid]||1)+d);
+  var el=document.getElementById("qv-"+pid); if(el) el.textContent=qtyMap[pid];
+}
+function setVar(pid,vi,el){
+  varMap[pid]=vi;
+  document.querySelectorAll("#pcard-"+pid+" .vb").forEach(function(b){b.classList.remove("on");});
+  if(el) el.classList.add("on");
+  var p=PRODUCTS.find(function(x){return x.id===pid;});
+  if(p&&p.variants){ var prEl=document.querySelector("#pr-"+pid); if(prEl) prEl.innerHTML=fmt(p.variants[vi].price); }
+}
+
+/* ─── CART ─── */
+function addCart(pid,btnEl){
+  if(pid===2){openHDC();return;}
+  if(pid===18){openSLV();return;}
+  var p=PRODUCTS.find(function(x){return x.id===pid;}); if(!p) return;
+  var vi=varMap[pid]!==undefined?varMap[pid]:-1;
+  var price=(vi>=0&&p.variants)?p.variants[vi].price:p.price;
+  var varLabel=(vi>=0&&p.variants)?p.variants[vi].name:"";
+  var qty=qtyMap[pid]||1;
+  var key=pid+"-"+vi;
+  var ex=cart.find(function(c){return c.key===key;});
+  if(ex) ex.qty+=qty;
+  else cart.push({id:p.id,name:p.name,key:key,qty:qty,price:price,varLabel:varLabel,mainImg:p.imgs[0]||""});
+  var card=document.getElementById("pcard-"+pid);
+  if(card){card.classList.remove("added");void card.offsetWidth;card.classList.add("added");}
+  updateCartUI();
+  var cn=document.getElementById("cn");
+  if(cn){cn.classList.remove("bump");void cn.offsetWidth;cn.classList.add("bump");}
+  toast("✓ أُضيف إلى السلة");
+}
+function rmCart(key){
+  cart=cart.filter(function(c){return c.key!==key;}); updateCartUI();
+}
+function updateCartUI(){
+  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+  var count=cart.reduce(function(s,c){return s+c.qty;},0);
+  var cn=document.getElementById("cn");
+  if(cn){cn.textContent=count||"";cn.classList.toggle("show",count>0);}
+  var ct=document.getElementById("cartTotal"); if(ct) ct.innerHTML=fmt(total);
+  var ci=document.getElementById("cartItems"); if(!ci) return;
+  if(!cart.length){ci.innerHTML="<div class='cart-empty'><div>🛒</div><div>السلة فارغة</div></div>";return;}
+  var html="";
+  cart.forEach(function(c){
+    html+="<div class='ci-row'><img class='ci-img' src='"+imgUrl(c.mainImg)+"' alt='"+c.name+"'>"
+      +"<div class='ci-info'><div class='ci-name'>"+c.name+"</div>"
+      +(c.varLabel?"<div class='ci-var'>"+c.varLabel+"</div>":"")
+      +"<div class='ci-price'>"+c.qty+" × "+fmt(c.price)+"</div></div>"
+      +"<button class='ci-rm' onclick=\"rmCart('"+c.key+"')\">✕</button></div>";
+  });
+  ci.innerHTML=html;
+}
+function openCart(){ document.getElementById("cartDrawer").classList.add("on"); document.getElementById("cartCov").classList.add("on"); document.body.style.overflow="hidden"; }
+function closeCart(){ document.getElementById("cartDrawer").classList.remove("on"); document.getElementById("cartCov").classList.remove("on"); document.body.style.overflow=""; }
+
+/* ─── CHECKOUT ─── */
+function openCheckout(){
+  if(!cart.length){toast("السلة فارغة","#e55");return;}
+  closeCart();
+  var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+  var rows="";
+  cart.forEach(function(c){
+    rows+="<div class='ord-row'><span>"+c.name+(c.varLabel?" ("+c.varLabel+")":"")+" ×"+c.qty+"</span><span>"+fmt(c.price*c.qty)+"</span></div>";
+  });
+  var discountHtml="";
+  if(appliedPromo){
+    var disc=Math.round(total*appliedPromo.discount/100);
+    var afterDisc=total-disc;
+    discountHtml="<div class='promo-discount-row'><span>🏷️ خصم "+appliedPromo.discount+"%</span><span>- "+fmt(disc,false)+" د.ع</span></div>";
+    discountHtml+="<div class='ord-total'><span>الإجمالي بعد الخصم</span><span>"+fmt(afterDisc)+"</span></div>";
+  } else {
+    discountHtml="<div class='ord-total'><span>المجموع الكلي</span><span>"+fmt(total)+"</span></div>";
+  }
+  document.getElementById("ordSummary").innerHTML="<div class='ord-items'>"+rows+discountHtml+"</div>";
+  appliedPromo=null;
+  var pm=document.getElementById("promoMsg"); if(pm){pm.className="promo-msg";pm.textContent="";}
+  var pi=document.getElementById("promoInput"); if(pi) pi.value="";
+  if(user&&user.name){ var f=document.getElementById("custName"); if(f&&!f.value) f.value=user.name; }
+  document.getElementById("checkoutModal").classList.add("on");
+  document.body.style.overflow="hidden";
+}
+function closeCheckout(){
+  document.getElementById("checkoutModal").classList.remove("on");
+  document.body.style.overflow="";
+  var btn=document.querySelector(".confirm-btn");
+  if(btn){btn.disabled=false;btn.innerHTML='<span>تأكيد الطلب</span><span style="font-size:1.1rem">🚀</span><span>✓</span>';}
+  var pm=document.getElementById("promoMsg"); if(pm){pm.className="promo-msg";pm.textContent="";}
+  var pi=document.getElementById("promoInput"); if(pi) pi.value="";
+  appliedPromo=null;
+}
+function selPay(m){
+  if(m!=="cash"&&m!=="zain") return;
+  payMethod=m;
+  ["cash","zain","master"].forEach(function(id){ var el=document.getElementById("pay_"+id); if(el) el.classList.remove("sel"); });
+  var el=document.getElementById("pay_"+m); if(el) el.classList.add("sel");
+  var zi=document.getElementById("zainInfo"); if(zi) zi.style.display=(m==="zain")?"block":"none";
+}
+function applyPromo(){
+  var code=(document.getElementById("promoInput").value||"").trim().toLowerCase();
+  var msg=document.getElementById("promoMsg");
+  if(!code){msg.className="promo-msg err";msg.textContent="أدخل الكود أولاً";return;}
+  msg.className="promo-msg";msg.textContent="";
+  var btn=document.querySelector(".promo-btn"); if(btn){btn.disabled=true;}
+  fetch(ORDER_API+"/promo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:code})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(btn){btn.disabled=false;}
+    if(!d||!d.ok){
+      appliedPromo=null;
+      msg.className="promo-msg err";
+      msg.textContent="❌ الكود غير صحيح أو منتهي الصلاحية";
+      return;
+    }
+    appliedPromo={code:code,discount:d.discount};
+    msg.className="promo-msg ok";
+    msg.textContent="✅ تم تطبيق خصم "+d.discount+"% بنجاح!";
+    // Update summary display
+    var total=cart.reduce(function(s,c){return s+c.price*c.qty;},0);
+    var disc=Math.round(total*d.discount/100);
+    var afterDisc=total-disc;
+    var rows="";
+    cart.forEach(function(c){
+      rows+="<div class='ord-row'><span>"+c.name+(c.varLabel?" ("+c.varLabel+")":"")+" ×"+c.qty+"</span><span>"+fmt(c.price*c.qty)+"</span></div>";
+    });
+    var discHtml="<div class='promo-discount-row'><span>🏷️ خصم "+d.discount+"%</span><span>- "+fmt(disc,false)+" د.ع</span></div>";
+    discHtml+="<div class='ord-total'><span>الإجمالي بعد الخصم</span><span>"+fmt(afterDisc)+"</span></div>";
+    document.getElementById("ordSummary").innerHTML="<div class='ord-items'>"+rows+discHtml+"</div>";
+  })
+  .catch(function(){
+    if(btn){btn.disabled=false;}
+    msg.className="promo-msg err";
+    msg.textContent="تعذّر التحقق، تحقق من الاتصال";
+  });
+}
+function placeOrder(){
+  var name=document.getElementById("custName").value.trim();
+  var phone=document.getElementById("custPhone").value.trim();
+  var addr=document.getElementById("custAddr").value.trim();
+  if(!name){toast("أدخل اسمك الكريم ✍️","#e55");document.getElementById("custName").focus();return;}
+  if(!phone){toast("أدخل رقم هاتفك 📞","#e55");document.getElementById("custPhone").focus();return;}
+  // نرسل أرقام المنتجات فقط — الـ Worker يحسب الأسعار والخصم من المصدر الموثوق
+  var items=cart.map(function(c){return {id:c.id,qty:c.qty,variant:c.varLabel||"",name:c.name,price:c.price};});
+  var payload={items:items,promo:appliedPromo?appliedPromo.code:"",name:name,phone:phone,addr:addr,payMethod:payMethod};
+  var btn=document.querySelector(".confirm-btn");
+  if(btn){btn.disabled=true;btn.textContent="⏳ جاري الإرسال...";}
+  fetch(ORDER_API+"/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.ok){
+      if(btn){btn.disabled=false;btn.innerHTML='<span>تأكيد الطلب</span><span style="font-size:1.1rem">🚀</span><span>✓</span>';}
+      cart=[];
+      updateCartUI();
+      if(d.zain){
+        // دفع زين كاش: نُظهر الرقم للزبون ونُبقي النافذة مفتوحة ليصوّره
+        var zi=document.getElementById("zainInfo");
+        if(zi){
+          zi.style.display="block";
+          zi.innerHTML="✅ تم استلام طلبك!<br>حوّل المبلغ إلى محفظة <b>زين كاش</b>:<br>"
+            +"<span style='font-size:1.25rem;font-weight:800;color:var(--gold2);letter-spacing:1px;'>"+d.zain+"</span><br>"
+            +"ثم أرسل صورة الإيصال على نفس الرقم لتأكيد طلبك 📤";
+        }
+        toast("✅ تم الطلب! تفاصيل التحويل ظهرت بالأسفل 👇","#25d366");
+      } else {
+        closeCheckout();
+        setTimeout(function(){
+          toast("✅ تم إرسال طلبك بنجاح! سنتواصل معك قريباً 🎉","#25d366");
+        },300);
+      }
+    } else {
+      var why=(d&&d.detail)?d.detail:((d&&d.error)?d.error:"غير معروف");
+      toast("حدث خطأ: "+why,"#e55");
+      if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
+    }
+  })
+  .catch(function(e){
+    toast("تعذّر الاتصال: "+(e&&e.message?e.message:"تحقق من الإنترنت"),"#e55");
+    if(btn){btn.disabled=false;btn.textContent="تأكيد الطلب ✓";}
+  });
+}
+
+/* ─── GOOGLE SIGN-IN ─── */
+function onGoogleSignIn(resp){
+  try{
+    var parts=resp.credential.split(".");
+    var payload=parts[1];
+    while(payload.length%4!==0) payload+="=";
+    // Use TextDecoder for proper Unicode support (fixes Arabic names)
+    var bytes=Uint8Array.from(atob(payload),function(c){return c.charCodeAt(0);});
+    var decoded=new TextDecoder().decode(bytes);
+    var p=JSON.parse(decoded);
+    user={name:p.name||p.given_name||"مستخدم",email:p.email,picture:p.picture||""};
+    try{localStorage.setItem("keplUser",JSON.stringify(user));}catch(e){}
+    updateUserUI(); closeAuth();
+    toast("✓ أهلاً "+user.name.split(" ")[0]+" 👋");
+  }catch(e){console.error("SignIn error:",e);}
+}
+function updateUserUI(){
+  var av=document.getElementById("userAvTxt"), nm=document.getElementById("userNameTxt"); if(!av) return;
+  if(user){
+    var firstName=user.name?user.name.split(" ")[0]:"مستخدم";
+    var initial=firstName.charAt(0).toUpperCase()||"U";
+    if(user.picture){
+      var img=document.createElement("img");
+      img.className="user-av";
+      img.src=user.picture;
+      img.referrerPolicy="no-referrer";
+      img.onerror=function(){av.textContent=initial;};
+      av.innerHTML="";
+      av.appendChild(img);
+    } else {
+      av.textContent=initial;
+    }
+    if(nm) nm.textContent=firstName;
+  } else {
+    av.textContent="؟";
+    if(nm) nm.textContent="تسجيل الدخول";
+  }
+}
+function openAuth(){
+  if(user){if(confirm("تسجيل خروج؟")){user=null;try{localStorage.removeItem("keplUser");}catch(e){}updateUserUI();toast("تم تسجيل الخروج");}return;}
+  document.getElementById("authModal").classList.add("on"); document.body.style.overflow="hidden";
+  if(window.google&&google.accounts){
+    google.accounts.id.initialize({client_id:G_CLIENT_ID,callback:onGoogleSignIn});
+    google.accounts.id.renderButton(document.getElementById("g_signin_btn"),{theme:"outline",size:"large",locale:"ar",width:260});
+  }
+}
+function closeAuth(){ document.getElementById("authModal").classList.remove("on"); document.body.style.overflow=""; }
+
+/* ─── SILVER LENS CATALOG ─── */
+const SLV_COLORS=[
+  {ar:"عسلي",c1:"#c8914a",c2:"#7a4a1a",ring:"#5a3210"},
+  {ar:"عسلي فاتح",c1:"#dcb877",c2:"#a87830",ring:"#7a5420"},
+  {ar:"خضر",c1:"#a3c79a",c2:"#3f7a3a",ring:"#2a5526"},
+  {ar:"أخضر زيتوني",c1:"#8a9a5a",c2:"#4a5a20",ring:"#303d14"},
+  {ar:"رمادي",c1:"#9a9da3",c2:"#4a4d54",ring:"#30333a"},
+  {ar:"رمادي داكن",c1:"#6a6d73",c2:"#2a2d33",ring:"#1a1c20"},
+  {ar:"أزرق",c1:"#6fa8d4",c2:"#1f5a8a",ring:"#143d61"},
+  {ar:"أزرق سماوي",c1:"#9cc7e8",c2:"#3f7bb0",ring:"#2a5580"},
+  {ar:"بني",c1:"#a8835a",c2:"#5e3c1f",ring:"#3f2813"},
+  {ar:"بني داكن",c1:"#6e5236",c2:"#3a2715",ring:"#26190d"},
+  {ar:"بنفسجي",c1:"#b89ed0",c2:"#6a4a93",ring:"#48316b"},
+  {ar:"وردي",c1:"#e0a8bc",c2:"#b05a78",ring:"#823c54"},
+  {ar:"فيروزي",c1:"#82cdcd",c2:"#1f8a8a",ring:"#136161"},
+  {ar:"أكوا",c1:"#8fd4d0",c2:"#2f9a92",ring:"#1d6e68"},
+  {ar:"كهرماني",c1:"#d4a04f",c2:"#9a6418",ring:"#6e470f"},
+  {ar:"رمادي أزرق",c1:"#8fa3c4",c2:"#3a4a6b",ring:"#26314a"},
+];
+var _slvPick=null;
+function openSLV(){
+  _slvPick=null;
+  var g=document.getElementById("slvGrid"); if(!g) return;
+  var h="";
+  SLV_COLORS.forEach(function(c,i){
+    var grad="radial-gradient(circle at 50% 50%,#111 0%,#111 16%,"+c.c1+" 22%,"+c.c2+" 64%,"+c.ring+" 100%)";
+    h+="<div class='slv-item' onclick='pickSLV("+i+",this)'><div class='slv-lens' style='background:"+grad+"'></div><div class='slv-ar'>"+c.ar+"</div></div>";
+  });
+  g.innerHTML=h;
+  var btn=document.getElementById("slvBtn"); if(btn){btn.disabled=true;btn.textContent="اختر لوناً أولاً";}
+  document.getElementById("slvModal").classList.add("on"); document.body.style.overflow="hidden";
+}
+function pickSLV(i,el){
+  _slvPick=i;
+  document.querySelectorAll(".slv-item").forEach(function(x){x.classList.remove("sel");});
+  if(el) el.classList.add("sel");
+  var btn=document.getElementById("slvBtn"); if(btn){btn.disabled=false;btn.textContent="🛒 أضف "+SLV_COLORS[i].ar+" للسلة";}
+}
+function closeSLV(){ document.getElementById("slvModal").classList.remove("on"); document.body.style.overflow=""; }
+function confirmSLV(){
+  if(_slvPick===null) return;
+  var col=SLV_COLORS[_slvPick];
+  var p=PRODUCTS.find(function(x){return x.id===18;}); if(!p) return;
+  var qty=qtyMap[18]||1, key="18-"+_slvPick;
+  var ex=cart.find(function(c){return c.key===key;});
+  if(ex) ex.qty+=qty;
+  else cart.push({id:p.id,name:p.name,key:key,qty:qty,price:p.price,varLabel:col.ar,mainImg:p.imgs[0]||""});
+  closeSLV(); updateCartUI();
+  var cn=document.getElementById("cn"); if(cn){cn.classList.remove("bump");void cn.offsetWidth;cn.classList.add("bump");}
+  toast("✓ أُضيفت عدسات "+col.ar+" للسلة"); openCart();
+}
+
+/* ─── HD COLOR CATALOG ─── */
+const HD_COLORS=[
+  {ar:"رمادي",c1:"#8a8d93",c2:"#3a3d44",ring:"#23252b"},
+  {ar:"رمادي أزرق",c1:"#8fa3c4",c2:"#3a4a6b",ring:"#26314a"},
+  {ar:"أزرق سماوي",c1:"#9cc7e8",c2:"#3f7bb0",ring:"#2a5580"},
+  {ar:"أزرق محيطي",c1:"#6fa8d4",c2:"#1f5a8a",ring:"#143d61"},
+  {ar:"أخضر",c1:"#a3c79a",c2:"#3f7a3a",ring:"#2a5526"},
+  {ar:"زمردي",c1:"#7fc4a8",c2:"#1f7a5c",ring:"#13543e"},
+  {ar:"عسلي",c1:"#caa46a",c2:"#8a5a25",ring:"#5e3c17"},
+  {ar:"عسلي فاتح",c1:"#dcb877",c2:"#a8772f",ring:"#7a5420"},
+  {ar:"بني",c1:"#a8835a",c2:"#5e3c1f",ring:"#3f2813"},
+  {ar:"بني داكن",c1:"#6e5236",c2:"#3a2715",ring:"#26190d"},
+  {ar:"كهرماني",c1:"#d4a04f",c2:"#9a6418",ring:"#6e470f"},
+  {ar:"بنفسجي",c1:"#b89ed0",c2:"#6a4a93",ring:"#48316b"},
+  {ar:"وردي",c1:"#e0a8bc",c2:"#b05a78",ring:"#823c54"},
+  {ar:"فيروزي",c1:"#82cdcd",c2:"#1f8a8a",ring:"#136161"},
+  {ar:"رمادي داكن",c1:"#6a6d73",c2:"#2a2d33",ring:"#1a1c20"},
+  {ar:"أكوا",c1:"#8fd4d0",c2:"#2f9a92",ring:"#1d6e68"}
+];
+var _hdPick=null;
+function openHDC(){
+  _hdPick=null;
+  var g=document.getElementById("hdcGrid"); if(!g) return;
+  var html="";
+  HD_COLORS.forEach(function(c,i){
+    var grad="radial-gradient(circle at 50% 50%,#111 0%,#111 16%,"+c.c1+" 22%,"+c.c2+" 64%,"+c.ring+" 100%)";
+    html+="<div class='hdc-item' onclick='pickHDC("+i+",this)'><div class='hdc-lens' style='background:"+grad+"'></div><div class='hdc-ar'>"+c.ar+"</div></div>";
+  });
+  g.innerHTML=html;
+  var btn=document.getElementById("hdcBtn"); if(btn){btn.disabled=true;btn.textContent="اختر لوناً أولاً";}
+  document.getElementById("hdcModal").classList.add("on"); document.body.style.overflow="hidden";
+}
+function pickHDC(i,el){
+  _hdPick=i;
+  document.querySelectorAll(".hdc-item").forEach(function(x){x.classList.remove("sel");});
+  if(el) el.classList.add("sel");
+  var btn=document.getElementById("hdcBtn"); if(btn){btn.disabled=false;btn.textContent="🛒 أضف "+HD_COLORS[i].ar+" للسلة";}
+}
+function closeHDC(){ document.getElementById("hdcModal").classList.remove("on"); document.body.style.overflow=""; }
+function confirmHDC(){
+  if(_hdPick===null) return;
+  var col=HD_COLORS[_hdPick];
+  var p=PRODUCTS.find(function(x){return x.id===2;}); if(!p) return;
+  var qty=qtyMap[2]||1, key="2-"+_hdPick;
+  var ex=cart.find(function(c){return c.key===key;});
+  if(ex) ex.qty+=qty;
+  else cart.push({id:p.id,name:p.name,key:key,qty:qty,price:p.price,varLabel:col.ar,mainImg:p.imgs[0]||""});
+  closeHDC(); updateCartUI();
+  var cn=document.getElementById("cn"); if(cn){cn.classList.remove("bump");void cn.offsetWidth;cn.classList.add("bump");}
+  toast("✓ أُضيفت عدسات "+col.ar+" للسلة"); openCart();
+}
+
+/* ─── LIGHTBOX ─── */
+var _lbImgs=[], _lbIdx=0;
+function openLB(e,pid){
+  e.stopPropagation();
+  var p=PRODUCTS.find(function(x){return x.id===pid;}); if(!p) return;
+  _lbImgs=p.imgs.map(function(k){return imgUrl(k);});
+  _lbIdx=galIdx[pid]||0; _renderLB();
+  document.getElementById("lbOv").classList.add("on"); document.body.style.overflow="hidden";
+}
+function closeLB(){ document.getElementById("lbOv").classList.remove("on"); document.body.style.overflow=""; }
+function _renderLB(){
+  var img=document.getElementById("lbImg"),dots=document.getElementById("lbDots"),counter=document.getElementById("lbCounter");
+  if(img){img.classList.add("fade");setTimeout(function(){img.src=_lbImgs[_lbIdx]||"";img.classList.remove("fade");},220);}
+  if(dots){var h="";_lbImgs.forEach(function(_,i){h+="<span class='lb-dot"+(i===_lbIdx?" on":"")+"' onclick='lbGo("+i+")'></span>";});dots.innerHTML=h;}
+  if(counter) counter.textContent=(_lbIdx+1)+" / "+_lbImgs.length;
+}
+function lbSlide(d){_lbIdx=(_lbIdx+d+_lbImgs.length)%_lbImgs.length;_renderLB();}
+function lbGo(i){_lbIdx=i;_renderLB();}
+document.addEventListener("keydown",function(e){
+  if(!document.getElementById("lbOv").classList.contains("on")) return;
+  if(e.key==="ArrowLeft") lbSlide(1); if(e.key==="ArrowRight") lbSlide(-1); if(e.key==="Escape") closeLB();
+});
+
+/* ─── HERO ─── */
+const HERO_KEYS=["img_chanel_cc_1","img_maybach_1","img_lv_cream_1","img_prada_white_1","img_hugo_boss_1"];
+var hIdx=0, hTimer=null;
+function buildHero(){
+  var sl=document.getElementById("heroSlides"),dt=document.getElementById("heroDots"); if(!sl||!dt) return;
+  var shtml="",dhtml="";
+  HERO_KEYS.forEach(function(k,i){
+    shtml+="<div class='hero-slide"+(i===0?" on":"")+"' id='hs-"+i+"'><img src='"+imgUrl(k)+"' alt='hero'></div>";
+    dhtml+="<span class='hero-dot"+(i===0?" on":"")+"' onclick='goHero("+i+")'></span>";
+  });
+  sl.innerHTML=shtml; dt.innerHTML=dhtml;
+  hTimer=setInterval(function(){goHero((hIdx+1)%HERO_KEYS.length);},4200);
+}
+function goHero(i){
+  var old=document.getElementById("hs-"+hIdx); if(old) old.classList.remove("on");
+  document.querySelectorAll(".hero-dot").forEach(function(d,j){d.classList.toggle("on",j===i);});
+  hIdx=i; var nd=document.getElementById("hs-"+hIdx); if(nd) nd.classList.add("on");
+  clearInterval(hTimer); hTimer=setInterval(function(){goHero((hIdx+1)%HERO_KEYS.length);},4200);
+}
+
+/* ─── STARFIELD ─── */
+(function(){
+  var c=document.getElementById("bgc"); if(!c) return;
+  var ctx=c.getContext("2d"),W,H,stars=[],meteors=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  resize(); window.addEventListener("resize",resize);
+  for(var i=0;i<160;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*.9+.2,o:Math.random()*.6+.2,s:Math.random()*.003+.001});
+  setInterval(function(){if(meteors.length<3&&Math.random()<.3)meteors.push({x:Math.random()*W,y:Math.random()*H*.4,l:Math.random()*100+60,s:Math.random()*4+3,o:1});},2000);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(function(s){s.o+=s.s;if(s.o>.8||s.o<.1)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,240,"+s.o+")";ctx.fill();});
+    meteors.forEach(function(m,i){ctx.save();ctx.globalAlpha=m.o;ctx.strokeStyle="rgba(255,240,180,.8)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(m.x,m.y);ctx.lineTo(m.x+Math.cos(Math.PI/4)*m.l,m.y+Math.sin(Math.PI/4)*m.l);ctx.stroke();ctx.restore();m.x+=m.s*2;m.y+=m.s*1.2;m.o-=.018;if(m.o<=0)meteors.splice(i,1);});
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ─── MISC ─── */
+function closeCat(){ var el=document.getElementById("catCov"); if(el) el.classList.remove("on"); }
+function toggleCat(){}
+
+/* ─── INIT ─── */
+/* ─── RESTORE SESSION ─── */
+try{
+  var _saved=localStorage.getItem("keplUser");
+  if(_saved){
+    var _u=JSON.parse(_saved);
+    if(_u&&_u.email&&_u.name){ user=_u; updateUserUI(); }
+    else { localStorage.removeItem("keplUser"); }
+  }
+}catch(e){ try{localStorage.removeItem("keplUser");}catch(e2){} }
+
+try{renderCatBar();}catch(e){console.error("cats:",e);}
+try{renderProducts();}catch(e){console.error("render:",e);}
+try{updateCartUI();}catch(e){console.error("cart:",e);}
+try{buildHero();}catch(e){console.error("hero:",e);}
+
+</script>
+
+<!-- LIGHTBOX -->
+<div class="lb-ov" id="lbOv" onclick="if(event.target===this)closeLB()">
+  <button class="lb-close" onclick="closeLB()">✕</button>
+  <button class="lb-arr lb-prev" id="lbPrev" onclick="lbSlide(-1)">‹</button>
+  <img class="lb-img" id="lbImg" src="" alt="">
+  <button class="lb-arr lb-next" id="lbNext" onclick="lbSlide(1)">›</button>
+  <div class="lb-dots" id="lbDots"></div>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+
+
+<!-- LIGHTBOX -->
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+</body>
+</html>
