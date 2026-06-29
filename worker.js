@@ -1,57 +1,62 @@
 /* ============================================================
    Kepler Optics — Order Backend (Cloudflare Worker)
    يخفي توكن تيليجرام + أكواد الخصم + يتحقق من الأسعار (منع التلاعب)
+   + تسجيل دخول Google مطلوب للكود + كود لمرة واحدة لكل حساب (عبر KV)
    ------------------------------------------------------------
-   الأسرار تُضبط كـ Variables/Secrets في Cloudflare (مو هنا):
-     TG_TOKEN      = توكن البوت الجديد
+   الأسرار (Secrets في Cloudflare):
+     TG_TOKEN      = توكن البوت
      TG_CHAT       = 209943943
-     PROMO_CODES   = {"yourcode":{"discount":15,"active":true}}   (أكوادك السرية — تُضبط في Cloudflare فقط)
-     ZAIN_NUMBER   = رقم محفظة زين كاش (يظهر للزبون فقط بعد تأكيد الطلب)
+     PROMO_CODES   = {"yourcode":{"discount":15,"active":true}}
+     ZAIN_NUMBER   = رقم محفظة زين كاش (يظهر بعد الطلب فقط)
+   ربط (في wrangler.jsonc):
+     USED_PROMOS   = KV namespace لتسجيل استخدام الأكواد (اختياري — لو غير مربوط يبقى الموقع يعمل)
    ============================================================ */
 
-// السماح بالوصول من موقعك فقط
 const ALLOWED_ORIGINS = [
   "https://kepler-iq.com",
   "https://www.kepler-iq.com",
   "https://alsamawe2.github.io",
 ];
 
-// كتالوج الأسعار (المصدر الموثوق — لا يثق بسعر العميل)
+// معرّف تطبيق Google (علني — للتحقق من جمهور التوكن)
+const G_CLIENT_ID = "998769763298-s0f5ef138c9jora947qsn2tkrq671iud.apps.googleusercontent.com";
+
 const PRICES = {
   1:28000, 2:52000, 3:6000, 4:48000, 5:34000, 6:19000, 7:28000, 8:28000,
   10:34000, 11:48000, 12:34000, 13:34000, 14:42000, 15:38000, 16:36000,
   17:34000, 18:22000, 19:32000,
 };
-const VARIANTS = {
-  3: { "60 ml": 6000, "130 ml": 10500 },
-};
+const VARIANTS = { 3: { "60 ml": 6000, "130 ml": 10500 } };
 
-function getPromos(env) {
-  try { return JSON.parse(env.PROMO_CODES || "{}"); } catch { return {}; }
-}
+function getPromos(env) { try { return JSON.parse(env.PROMO_CODES || "{}"); } catch { return {}; } }
 function cors(origin) {
   const allow = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
+  return { "Access-Control-Allow-Origin": allow, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
 }
 function json(data, origin, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json", ...cors(origin) },
-  });
+  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...cors(origin) } });
 }
 const fmt = (n) => Number(n).toLocaleString("en-US");
+
+// التحقق من توكن Google وإرجاع البريد الموثّق (أو null)
+async function verifyGoogle(idToken) {
+  if (!idToken) return null;
+  try {
+    const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken));
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d.aud !== G_CLIENT_ID) return null;                    // التوكن لتطبيق آخر
+    if (d.email_verified !== "true" && d.email_verified !== true) return null;
+    return d.email ? String(d.email).toLowerCase() : null;
+  } catch { return null; }
+}
+const usedKey = (code, email) => "used:" + code + ":" + email;
 
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
     if (request.method === "OPTIONS") return new Response(null, { headers: cors(origin) });
     const url = new URL(request.url);
-
-    // فحص بسيط عند الجذر
     if (request.method === "GET") return new Response("Kepler order API ✓", { headers: { "Content-Type": "text/plain" } });
     if (request.method !== "POST") return json({ ok: false, error: "method" }, origin, 405);
 
@@ -59,15 +64,21 @@ export default {
     try { body = await request.json(); } catch { return json({ ok:false, error:"bad json" }, origin, 400); }
     const PROMO_CODES = getPromos(env);
 
-    // التحقق من كود خصم (للعرض اللحظي)
+    // ── التحقق من كود خصم (يتطلب تسجيل دخول) ──
     if (url.pathname.endsWith("/promo")) {
       const code = String(body.code || "").trim().toLowerCase();
       const p = PROMO_CODES[code];
       if (!p || !p.active) return json({ ok:false }, origin);
+      const email = await verifyGoogle(body.token);
+      if (!email) return json({ ok:false, error:"login" }, origin);          // لازم دخول
+      if (env.USED_PROMOS) {
+        const used = await env.USED_PROMOS.get(usedKey(code, email));
+        if (used) return json({ ok:false, error:"used" }, origin);           // مستخدم مسبقاً
+      }
       return json({ ok:true, discount: p.discount }, origin);
     }
 
-    // استلام طلب
+    // ── استلام طلب ──
     if (url.pathname.endsWith("/order")) {
       const items = Array.isArray(body.items) ? body.items : [];
       const name  = String(body.name  || "").trim().slice(0,80);
@@ -75,6 +86,19 @@ export default {
       const addr  = String(body.addr  || "").trim().slice(0,200);
       const promoCode = String(body.promo || "").trim().toLowerCase();
       if (!items.length || !name || !phone) return json({ ok:false, error:"missing" }, origin, 400);
+
+      // التحقق من الخصم (دخول + لمرة واحدة) قبل أي شيء
+      let email = null, applyPromo = false;
+      const p = PROMO_CODES[promoCode];
+      if (promoCode && p && p.active) {
+        email = await verifyGoogle(body.token);
+        if (!email) return json({ ok:false, error:"login" }, origin);
+        if (env.USED_PROMOS) {
+          const used = await env.USED_PROMOS.get(usedKey(promoCode, email));
+          if (used) return json({ ok:false, error:"used" }, origin);
+        }
+        applyPromo = true;
+      }
 
       let total = 0, anyUnverified = false;
       const lineTexts = items.map((it, i) => {
@@ -85,18 +109,16 @@ export default {
         if (VARIANTS[id] && variant && VARIANTS[id][variant] != null) unit = VARIANTS[id][variant];
         else if (PRICES[id] != null) unit = PRICES[id];
         else { unit = parseInt(it.price,10) || 0; anyUnverified = true; }
-        const sum = unit * qty;
-        total += sum;
+        const sum = unit * qty; total += sum;
         const nm = String(it.name || ("#"+id)).slice(0,60);
         return (i+1)+". "+nm+(variant?" - "+variant:"")+" × "+qty+"  ➜  "+fmt(sum)+" د.ع";
       });
 
       let discountLine = "💰 المجموع: "+fmt(total)+" د.ع";
-      const p = PROMO_CODES[promoCode];
-      if (p && p.active) {
+      if (applyPromo) {
         const disc = Math.round(total * p.discount / 100);
         discountLine = "💰 المجموع الأصلي: "+fmt(total)+" د.ع\n"
-          + "🏷️ كود الخصم: "+promoCode+" (-"+p.discount+"%)\n"
+          + "🏷️ كود الخصم: "+promoCode+" (-"+p.discount+"%)  [حساب: "+email+"]\n"
           + "✅ الإجمالي بعد الخصم: "+fmt(total-disc)+" د.ع";
         total = total - disc;
       }
@@ -115,15 +137,17 @@ export default {
 
       if (!env.TG_TOKEN || !env.TG_CHAT) return json({ ok:false, error:"config", detail:"TG_TOKEN/TG_CHAT غير مضبوطة" }, origin, 500);
       const tgUrl = "https://api.telegram.org/bot" + env.TG_TOKEN + "/sendMessage";
-      const r = await fetch(tgUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: env.TG_CHAT, text: msg }),  // نص عادي — أكثر أماناً (بدون Markdown)
-      });
+      const r = await fetch(tgUrl, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ chat_id: env.TG_CHAT, text: msg }) });
       const d = await r.json().catch(() => ({}));
       if (!d.ok) { console.log("Telegram error:", JSON.stringify(d)); return json({ ok:false, error:"telegram", detail: d.description || "" }, origin, 502); }
+
+      // تسجيل الكود كمستخدم (بعد نجاح الطلب فقط)
+      if (applyPromo && email && env.USED_PROMOS) {
+        try { await env.USED_PROMOS.put(usedKey(promoCode, email), Date.now().toString()); } catch {}
+      }
+
       const resp = { ok:true, orderNum, total };
-      if (body.payMethod === "zain") resp.zain = env.ZAIN_NUMBER || "";  // يُعاد للزبون فقط بعد الطلب
+      if (body.payMethod === "zain") resp.zain = env.ZAIN_NUMBER || "";
       return json(resp, origin);
     }
 
