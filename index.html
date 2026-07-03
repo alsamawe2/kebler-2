@@ -137,6 +137,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
 .pcat{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
 .pname{font-size:.88rem;font-weight:700;line-height:1.2;color:var(--txt);}
 .pname-sub{font-size:.68rem;color:var(--muted);font-weight:400;}
+.psize{font-size:.66rem;color:var(--gold2);margin:2px 0 4px;}
+.rx-row{display:flex;align-items:center;gap:8px;margin:.8rem 0 .2rem;font-size:.82rem;color:var(--txt);cursor:pointer;}
+.rx-row input{width:17px;height:17px;accent-color:var(--gold);cursor:pointer;}
+.rx-note{font-size:.68rem;color:var(--muted);margin-top:2px;}
 .pdesc{font-size:.7rem;color:var(--muted);line-height:1.5;display:-webkit-box;
   -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .varw{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
@@ -559,6 +563,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;
       <label>العنوان</label>
       <input id="custAddr" type="text" placeholder="المحافظة / المنطقة">
     </div>
+    <label class="rx-row"><input type="checkbox" id="rxOpt"> 🩺 أريد تحويلها إلى نظارة طبية</label>
+    <div class="rx-note">علّم هذا الخيار وسنتواصل معك بخصوص العدسات الطبية والقياس</div>
     <div class="field-group" style="margin-top:.8rem;">
       <label>🏷️ كود الخصم (اختياري)</label>
       <div class="promo-row">
@@ -791,14 +797,22 @@ const IMGS = {
   img_rayban_clear_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_rayban_clear_4.JPG",
   img_moscot_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_moscot_1.JPG",
   img_moscot_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_moscot_2.JPG",
-  img_moscot_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_moscot_3.JPG"
+  img_moscot_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_moscot_3.JPG",
+  img_armani_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_armani_1.JPG",
+  img_armani_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_armani_2.JPG",
+  img_armani_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_armani_3.JPG",
+  img_armani_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_armani_4.JPG",
+  img_tf_halfrim_1: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_halfrim_1.JPG",
+  img_tf_halfrim_2: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_halfrim_2.JPG",
+  img_tf_halfrim_3: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_halfrim_3.JPG",
+  img_tf_halfrim_4: "https://cdn.jsdelivr.net/gh/alsamawe2/kebler-2@main/images/img_tf_halfrim_4.JPG"
 };
 
 
 const PRODUCTS = [
   { id:1, name:"Chanel 4244", nameAr:"", category:"نظارات شمسية",
     imgs:["img_chanel_cc_1","img_chanel_cc_2","img_chanel_cc_3","img_chanel_cc_4","img_chanel_cc_5","img_chanel_cc_6","img_chanel_dark_1","img_chanel_dark_2","img_chanel_dark_3"],
-    badge:"جديد", badgeType:"new", price:28000, oldPrice:null, rating:4.9, reviews:14,
+    badge:"جديد", badgeType:"new", price:28000, oldPrice:null, rating:4.9, reviews:14, size:"57mm",
     desc:"Chanel 4244 Octagonal — إطار هندسي ثماني بعدسات متدرجة وشعار CC الذهبي" },
   { id:2, name:"عدسات HD الفرنسية", nameAr:"HD Lenses", category:"عدسات تجميلية",
     imgs:["img_hd_lenses_1","img_hd_lenses_2"],
@@ -811,55 +825,55 @@ const PRODUCTS = [
     variants:[{name:"60 ml",price:6000},{name:"130 ml",price:10500}] },
   { id:4, name:"Maybach The Titan", nameAr:"", category:"نظارات شمسية",
     imgs:["img_maybach_1","img_maybach_2","img_maybach_3","img_maybach_4","img_maybach_5","img_maybach_6","img_cartier_av_1","img_dita_1","img_dita_2"],
-    badge:"فاخر", badgeType:"hot", price:25000, oldPrice:null, rating:4.9, reviews:5,
+    badge:"فاخر", badgeType:"hot", price:25000, oldPrice:null, rating:4.9, reviews:5, size:"≈59mm",
     desc:"Maybach The Titan — إطار ذهبي rimless فاخر بعدسات بنفسجية متدرجة وشعار Maybach" },
   { id:5, name:"Louis Vuitton Rimless", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_rimless_1","img_lv_rimless_2","img_lv_rimless_3","img_lv_rimless_4","img_octa_silver_1","img_octa_silver_2","img_octa_silver_3","img_octa_silver_4","img_octa_silver_5","img_octa_silver_6"],
-    badge:"فاخر", badgeType:"hot", price:24000, oldPrice:null, rating:4.9, reviews:14,
+    badge:"فاخر", badgeType:"hot", price:24000, oldPrice:null, rating:4.9, reviews:14, size:"≈58mm",
     desc:"Louis Vuitton Rimless — نظارة بدون إطار بعدسات هندسية فاتحة متدرجة وأذرع ذهبية فاخرة" },
   { id:6, name:"Louis Vuitton White Square", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_white_1","img_lv_white_2","img_lv_white_3","img_lv_white_4","img_lv_white_5","img_lv_cream_1","img_lv_cream_2","img_prada_white_1","img_prada_white_2","img_prada_white_3"],
-    badge:"فاخر", badgeType:"hot", price:28000, oldPrice:null, rating:4.9, reviews:24,
+    badge:"فاخر", badgeType:"hot", price:28000, oldPrice:null, rating:4.9, reviews:24, size:"≈55mm",
     desc:"Louis Vuitton White Square — إطار أبيض عاجي مربع فاخر بعدسات بنفسجية متدرجة وشعار LV ذهبي" },
   { id:7, name:"Prada Black", nameAr:"", category:"نظارات شمسية",
     imgs:["img_prada_black_1","img_prada_black_2","img_prada_black_3","img_prada_black_4","img_prada_black_5","img_prada_black_6","img_lv_black_1","img_lv_black_2"],
-    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:14,
+    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:14, size:"≈57mm",
     desc:"Prada Black — إطار أسود لامع مستطيل بعدسات بنفسجية متدرجة وتصميم أنيق" },
   { id:8, name:"Hugo Boss Polarized", nameAr:"", category:"نظارات شمسية",
     imgs:["img_hugo_boss_1","img_hugo_boss_2","img_hugo_boss_3","img_hugo_boss_4","img_hugo_boss_5","img_hugo_boss_6"],
-    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:23,
+    badge:"الأكثر مبيعاً", badgeType:"hot", price:28000, oldPrice:null, rating:4.8, reviews:23, size:"≈57mm",
     desc:"Hugo Boss Polarized — إطار بني مطفي مع عدسات بنية Polarized وحماية UV400" },
   { id:10, name:"Prada PR 60VS Baroque", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_prada_octa_1","img_prada_octa_2","img_prada_octa_3","img_prada_octa_4","img_prada_octa_5","img_prada_octa_6"],
-    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:4,
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:4, size:"≈56mm",
     desc:"Prada PR 60VS — إطار ذهبي octagonal بعدسات بنية متدرجة وذراع بخط أحمر مميز" },
   { id:11, name:"Matsuda Steampunk", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_matsuda_1","img_matsuda_2","img_matsuda_3","img_matsuda_4","img_matsuda_5","img_matsuda_6"],
-    badge:"جديد", badgeType:"new", price:48000, oldPrice:null, rating:4.9, reviews:11,
+    badge:"جديد", badgeType:"new", price:48000, oldPrice:null, rating:4.9, reviews:11, size:"≈49mm",
     desc:"Matsuda Steampunk — نظارة دائرية يابانية بعدسات ND قابلة للتعديل وزنبركات ذهبية" },
   { id:12, name:"DITA Mach-S Aviator", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_dita_3","img_dita_4","img_dita_5","img_dita_6"],
-    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:7,
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:7, size:"≈58mm",
     desc:"DITA Mach-S — إطار aviator رمادي بجسر مزدوج وعدسات داكنة وتصميم titanium حصري" },
   { id:13, name:"Louis Vuitton Blue Rimless", nameAr:"", category:"نظارات شمسية",
     imgs:["img_lv_blue_1","img_lv_blue_2","img_lv_blue_3","img_lv_blue_4"],
-    badge:"فاخر", badgeType:"hot", price:19000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"فاخر", badgeType:"hot", price:19000, oldPrice:null, rating:4.9, reviews:0, size:"≈58mm",
     desc:"Louis Vuitton Rimless Blue — نظارة بدون إطار بعدسات زرقاء متدرجة فاتحة وأذرع ذهبية فاخرة وشعار Louis Vuitton" },
   { id:14, name:"Cartier CT0271S", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_cartier_ct_1","img_cartier_ct_2","img_cartier_ct_3","img_cartier_ct_4"],
-    badge:"جديد", badgeType:"new", price:38000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:38000, oldPrice:null, rating:4.9, reviews:0, size:"58mm",
     desc:"Cartier CT0271S — إطار أسود مزدوج الجسر بعدسات زرقاء-وردية متدرجة وذراع Cartier مخططة فاخرة" },
   { id:15, name:"Dolce & Gabbana DG2270", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_dg_2270_1","img_dg_2270_2","img_dg_2270_3","img_dg_2270_4"],
-    badge:"جديد", badgeType:"new", price:38000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:38000, oldPrice:null, rating:4.9, reviews:0, size:"57mm",
     desc:"Dolce & Gabbana DG2270 — إطار ذهبي aviator مزدوج الجسر بجانبيات شبكية مثقبة وعدسات بنفسجية متدرجة وذراع جلدية فاخرة" },
   { id:16, name:"Tom Ford FT0972 Raquel", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_tf_raquel_1","img_tf_raquel_2","img_tf_raquel_3"],
-    badge:"جديد", badgeType:"new", price:36000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:36000, oldPrice:null, rating:4.9, reviews:0, size:"≈62mm",
     desc:"Tom Ford FT0972 Raquel — إطار ذهبي هندسي ثماني بعدسات بنية متدرجة وذراع داكنة فاخرة بشعار TOM FORD" },
   { id:17, name:"DITA Mach-S Aviator Black", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_dita_black_1","img_dita_black_2","img_dita_black_3"],
-    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0, size:"≈58mm",
     desc:"DITA Mach-S — إطار أسود مطفي aviator هندسي مزدوج الجسر بعدسات سوداء داكنة وتصميم titanium حصري" },
   { id:18, name:"Silver Lenses", nameAr:"Silver Lenses", category:"عدسات تجميلية",
     imgs:["img_silver_box_1","img_silver_eye_1"],
@@ -867,37 +881,45 @@ const PRODUCTS = [
     desc:"Silver Lenses — عدسات تجميلية بألوان متعددة وجودة عالية لإطلالة مميزة" },
   { id:19, name:"Maybach Rimless", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_maybach_blue_1","img_maybach_blue_2","img_maybach_blue_3","img_maybach_blue_4"],
-    badge:"فاخر", badgeType:"hot", price:29000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"فاخر", badgeType:"hot", price:29000, oldPrice:null, rating:4.9, reviews:0, size:"≈58mm",
     desc:"Maybach Rimless — نظارة فاخرة بدون إطار، عدسات زرقاء متدرجة متغيّرة اللون مع حماية من الضوء الأزرق، وذراعين أسود مع تفاصيل ذهبية وشعار Maybach" },
   { id:20, name:"Bugatti Navigator", nameAr:"", category:"نظارات شمسية",
     imgs:["img_bugatti_2","img_bugatti_1","img_bugatti_3","img_bugatti_4"],
-    badge:"فاخر", badgeType:"hot", price:27000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"فاخر", badgeType:"hot", price:27000, oldPrice:null, rating:4.9, reviews:0, size:"≈58mm",
     desc:"Bugatti Navigator — نظارة شمسية فاخرة بإطار أسود مطفي وعدسات داكنة، جسر علوي مزدوج مع لمسة جلد أحمر وشعار EB، وذراعين أسود بشعار Bugatti" },
   { id:21, name:"Louis Vuitton Attitude", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_lv_attitude_1","img_lv_attitude_2","img_lv_attitude_3","img_lv_attitude_4"],
-    badge:"فاخر", badgeType:"hot", price:45000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"فاخر", badgeType:"hot", price:45000, oldPrice:null, rating:4.9, reviews:0, size:"59mm",
     desc:"Louis Vuitton Attitude — نظارة شمسية فاخرة بإطار أسود وجسر مزدوج، عدسات متدرجة، وأذرع بنقشة مونوغرام LV مع شعار LV الذهبي" },
   { id:22, name:"Gucci Geometric", nameAr:"", category:"نظارات شمسية",
     imgs:["img_gucci_1","img_gucci_2","img_gucci_3"],
-    badge:"جديد", badgeType:"new", price:25000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:25000, oldPrice:null, rating:4.9, reviews:0, size:"≈51mm",
     desc:"Gucci Geometric — نظارة شمسية بإطار أسود هندسي سداسي وعدسات داكنة، مع شعار GG ونقشة Web الخضراء-الحمراء على الذراع" },
   { id:23, name:"Ray-Ban Ferrari RB3617M", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_rayban_ferrari_1","img_rayban_ferrari_2","img_rayban_ferrari_3","img_rayban_ferrari_4"],
-    badge:"رائج", badgeType:"hot", price:38000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"رائج", badgeType:"hot", price:38000, oldPrice:null, rating:4.9, reviews:0, size:"62mm",
     desc:"Ray-Ban Scuderia Ferrari RB3617M — نظارة شمسية بإطار معدني فضي وجسر مزدوج، عدسات رمادية، مع شعار Ferrari وأذرع تحمل اسم Ferrari" },
   { id:24, name:"Aedoll Round", nameAr:"نظارة دائرية", category:"نظارات شمسية",
     imgs:["img_aedoll_1","img_aedoll_2","img_aedoll_3","img_aedoll_4","img_aedoll_5"],
-    badge:"جديد", badgeType:"new", price:26000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:26000, oldPrice:null, rating:4.9, reviews:0, size:"≈50mm",
     desc:"Aedoll Round — نظارة شمسية دائرية كلاسيكية بحماية UV400، متوفرة بلونين: إطار ذهبي بعدسات متدرجة وردية، وإطار أسود بعدسات داكنة",
     variants:[{name:"ذهبي / عدسة وردية",price:26000},{name:"أسود / عدسة داكنة",price:26000}] },
   { id:25, name:"Ray-Ban Ferrari Hexagonal", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_rayban_clear_1","img_rayban_clear_2","img_rayban_clear_3","img_rayban_clear_4"],
-    badge:"رائج", badgeType:"hot", price:38000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"رائج", badgeType:"hot", price:38000, oldPrice:null, rating:4.9, reviews:0, size:"≈54mm",
     desc:"Ray-Ban Scuderia Ferrari — نظارة شمسية بإطار شفاف هندسي وجسر علوي معدني، عدسات G-15 خضراء بحماية UV 100%، مع شعار Ferrari ولمسة حمراء على الأذرع" },
   { id:26, name:"MOSCOT Polarized", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
     imgs:["img_moscot_1","img_moscot_2","img_moscot_3"],
-    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0,
+    badge:"جديد", badgeType:"new", price:34000, oldPrice:null, rating:4.9, reviews:0, size:"≈49mm",
     desc:"MOSCOT — نظارة شمسية بإطار أسود هندسي وعدسات زرقاء مستقطبة (Polarized) بحماية UV400، وأذرع بنقشة خشبية أنيقة" },
+  { id:27, name:"Giorgio Armani Rimless", nameAr:"", category:"نظارات شمسية",
+    imgs:["img_armani_1","img_armani_2","img_armani_3","img_armani_4"],
+    badge:"جديد", badgeType:"new", price:25000, oldPrice:null, rating:4.9, reviews:0, size:"≈60mm",
+    desc:"Giorgio Armani — نظارة شمسية بدون إطار، عدسات مقصوصة بزاوية ماسية متدرّجة (أزرق-بني) بحماية UV 100%، وذراعين ذهبي بشعار النسر، مع لمسة سوداء" },
+  { id:28, name:"Tom Ford Half-Rim", nameAr:"ماستر كوالتي", category:"نظارات شمسية",
+    imgs:["img_tf_halfrim_1","img_tf_halfrim_2","img_tf_halfrim_3","img_tf_halfrim_4"],
+    badge:"جديد", badgeType:"new", price:30000, oldPrice:null, rating:4.9, reviews:0, size:"≈52mm",
+    desc:"Tom Ford Half-Rim — نظارة شمسية بإطار نصفي أسود هندسي، عدسات رمادية متدرّجة، وأذرع سوداء بشعار TOM FORD" },
 ];
 
 
@@ -1033,6 +1055,7 @@ function renderProducts(){
         +"<div class='pbody'>"
           +"<div class='pcat'>"+p.category+"</div>"
           +"<div class='pname'>"+p.name+(p.nameAr?"<div class='pname-sub'>"+p.nameAr+"</div>":"")+"</div>"
+          +(p.size?"<div class='psize'>📏 عرض العدسة: "+p.size+"</div>":"")
           +varHtml
           +"<div class='p-action'>"
             +"<div class='p-price'>"+oldHtml+"<div class='p-cur' id='pr-"+p.id+"'>"+fmt(price)+"</div></div>"
@@ -1198,7 +1221,8 @@ function placeOrder(){
   if(!phone){toast("أدخل رقم هاتفك 📞","#e55");document.getElementById("custPhone").focus();return;}
   // نرسل أرقام المنتجات فقط — الـ Worker يحسب الأسعار والخصم من المصدر الموثوق
   var items=cart.map(function(c){return {id:c.id,qty:c.qty,variant:c.varLabel||"",name:c.name,price:c.price};});
-  var payload={items:items,promo:appliedPromo?appliedPromo.code:"",token:(user&&user.token)?user.token:"",name:name,phone:phone,addr:addr,payMethod:payMethod};
+  var rxEl=document.getElementById("rxOpt");
+  var payload={items:items,promo:appliedPromo?appliedPromo.code:"",token:(user&&user.token)?user.token:"",name:name,phone:phone,addr:addr,payMethod:payMethod,rx:!!(rxEl&&rxEl.checked)};
   var btn=document.querySelector(".confirm-btn");
   if(btn){btn.disabled=true;btn.textContent="⏳ جاري الإرسال...";}
   fetch(ORDER_API+"/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
