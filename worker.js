@@ -21,7 +21,7 @@ const ALLOWED_ORIGINS = [
 // معرّف تطبيق Google (علني — للتحقق من جمهور التوكن)
 const G_CLIENT_ID = "998769763298-s0f5ef138c9jora947qsn2tkrq671iud.apps.googleusercontent.com";
 
-const PRICES = { 1:28000, 2:52000, 3:6000, 4:25000, 5:24000, 6:28000, 7:28000, 8:28000, 10:34000, 11:48000, 12:34000, 13:19000, 14:38000, 15:38000, 16:36000, 17:34000, 18:48000, 19:29000, 20:27000, 21:45000, 22:25000, 23:38000, 24:26000, 25:38000, 26:34000, 27:25000, 28:30000 };
+const PRICES = { 1:28000, 2:52000, 3:6000, 4:25000, 5:24000, 6:28000, 7:28000, 8:28000, 10:34000, 11:48000, 12:34000, 13:19000, 14:38000, 15:38000, 16:36000, 17:34000, 18:48000, 19:29000, 20:27000, 21:45000, 22:25000, 23:38000, 24:26000, 25:38000, 26:34000, 27:25000, 28:30000, 29:25000 };
 const VARIANTS = { 3: { "60 ml": 6000, "130 ml": 10500 }, 24: { "ذهبي / عدسة وردية": 26000, "أسود / عدسة داكنة": 26000 } };
 
 function getPromos(env) { try { return JSON.parse(env.PROMO_CODES || "{}"); } catch { return {}; } }
@@ -47,6 +47,17 @@ async function verifyGoogle(idToken) {
   } catch { return null; }
 }
 const usedKey = (code, email) => "used:" + code + ":" + email;
+
+// تنسيق فحص النظر المرفق مع الطلب (SPH/CYL/AXIS لكل عين)
+function rxVal(v) { const s = String(v == null ? "" : v).slice(0, 10).trim(); return s || "—"; }
+function fmtRx(rx) {
+  if (!rx || (!rx.od && !rx.os)) return "";
+  const od = rx.od || {}, os = rx.os || {};
+  return "📋 فحص النظر المرفق:\n"
+    + "  العين اليمنى OD: SPH " + rxVal(od.sph) + " | CYL " + rxVal(od.cyl) + " | AXIS " + rxVal(od.axis) + "\n"
+    + "  العين اليسرى OS: SPH " + rxVal(os.sph) + " | CYL " + rxVal(os.cyl) + " | AXIS " + rxVal(os.axis) + "\n"
+    + (rx.date ? "  تاريخ الفحص: " + String(rx.date).slice(0, 12) + "\n" : "");
+}
 
 export default {
   async fetch(request, env) {
@@ -126,7 +137,7 @@ export default {
         + lineTexts.join("\n") + "\n━━━━━━━━━━━━━━━\n"
         + discountLine + "\n"
         + "💳 الدفع: "+payLabel+"\n"
-        + (body.rx ? "🩺 يرغب بتحويلها إلى نظارة طبية — تواصل معه بخصوص العدسات\n" : "")
+        + (body.rx ? "🩺 يرغب بتحويلها إلى نظارة طبية — تواصل معه بخصوص العدسات\n" + fmtRx(body.rxData) : "")
         + "━━━━━━━━━━━━━━━\n"
         + "👤 الاسم: "+name+"\n📞 الهاتف: "+phone
         + (addr ? "\n📍 العنوان: "+addr : "")
